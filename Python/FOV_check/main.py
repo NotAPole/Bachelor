@@ -2,10 +2,10 @@
 README
 
 @author: Pål-André Furnes
-this project is developed to be used for proof-of-concept in a bachelor thesis.
+this project is developed to be used for proof-of-concept in my bachelor thesis.
 a pallet is represented by an array of 3D points.
-a camera is represented by a single point in space facing a specified direction and field of view.
-the resulting plot show blue and red points. blue means seen, red means unseen.
+a camera is represented by a single point in space facing a specified direction with a specified field of view.
+the resulting 3D-plot show green and red points. green means seen, red means unseen.
 """
 import time
 
@@ -38,36 +38,36 @@ class Camera:
     def check_FOV(self, point, possibleObstructions, step):
         planarEquations = get_planar_equations(possibleObstructions)
         x, y, z = self.calculate_coordinates(point, step)
-        conObs = self.check_for_obstructions(planarEquations, possibleObstructions, x, y, z)
+        conObs = self.check_for_obstructions(planarEquations, possibleObstructions, x, y, z, point)
 
         return conObs
 
     def calculate_coordinates(self, point, step):
-        x, y, z = [], [], []
-        for j in range(step + 1):
-            x.append((point[0] - self.x) / step * j + self.x)
-            y.append((point[1] - self.y) / step * j + self.y)
-            z.append((point[2] - self.z) / step * j + self.z)
-            # print(x, y, z)
+        x = np.linspace(self.x, point[0], step)
+        y = np.linspace(self.y, point[1], step)
+        z = np.linspace(self.z, point[2], step)
 
         return x, y, z
 
-    def check_for_obstructions(self, equations, surfaces, x, y, z):
-        threshold = 0.001
+    def check_for_obstructions(self, equations, surfaces, x, y, z, point):
+        threshold = 1
         for j in range(len(x)):
             for k, l in enumerate(equations):
                 planar_result = l[0]*(x[j]-l[1]) + l[2]*(y[j]-l[3]) + l[4]*(z[j]-l[5])
-                #print(planar_result)
                 crossingPlane = abs(planar_result) < threshold
                 if crossingPlane:
-                    print("d")
-                    corners_x = (surfaces[k][0][0], surfaces[k][2][0])
-                    corners_y = (surfaces[k][0][1], surfaces[k][2][1])
-                    corners_z = (surfaces[k][0][2], surfaces[k][2][2])
-                    print(x[j], np.min(corners_x), np.max(corners_x))
-                    conObs = np.min(corners_x) <= x[j] <= np.max(corners_x) and np.min(corners_y) <= y[j] <= np.max(corners_y) and np.min(corners_z) <= z[j] <= np.max(corners_z)
-                    print(conObs)
+                    print("crossed at", [x[j], y[j], z[j]], "going to", point)
+                    corners_x = (np.min([surfaces[k][0][0],surfaces[k][1][0],surfaces[k][2][0],surfaces[k][3][0]]), np.max([surfaces[k][0][0],surfaces[k][1][0],surfaces[k][2][0],surfaces[k][3][0]]))
+                    corners_y = (np.min([surfaces[k][0][1],surfaces[k][1][1],surfaces[k][2][1],surfaces[k][3][1]]), np.max([surfaces[k][0][1],surfaces[k][1][1],surfaces[k][2][1],surfaces[k][3][1]]))
+                    corners_z = (np.min([surfaces[k][0][2],surfaces[k][1][2],surfaces[k][2][2],surfaces[k][3][2]]), np.max([surfaces[k][0][2],surfaces[k][1][2],surfaces[k][2][2],surfaces[k][3][2]]))
+                    
+                    print(np.min(corners_x) <= x[j] <= np.max(corners_x), np.min(corners_y) <= y[j] <= np.max(
+                        corners_y), np.min(corners_z) <= z[j] <= np.max(corners_z),
+                          not ([x[j], y[j], z[j]] == point))
+                    conObs = corners_x[0] <= x[j] <= corners_x[1] and corners_y[0] <= y[j] <= corners_y[1] and corners_z[0] <= z[j] <= corners_z[1] and not([x[j], y[j], z[j]] == point)
+
                     if conObs:
+                        print(x[j], y[j], z[j], surfaces[k][0], surfaces[k][1], surfaces[k][2], surfaces[k][3])
                         return True
 
         return False
@@ -90,33 +90,25 @@ def show_plots(seenPoints, obstructedPoints, palletFaces, cameraPoint):
         Y_obs.append(j[1])
         Z_obs.append(j[2])
 
-    y_tilt = 50
-    x_tilt = 24
-    for j in range(2):
-        plt.figure()
-        ax = plt.axes(projection='3d')
-        plt.xlim(0, 6)
-        plt.ylim(0, 6)
-        ax.set_zlim(0, 6)
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
-        ax.scatter(X_seen, Y_seen, Z_seen, color="green")
-        ax.scatter(X_obs, Y_obs, Z_obs, color="red")
-        for k in palletFaces:
-            for l in k:
-                ax.scatter(l[0], l[1], l[2], color="blue")
-        ax.scatter(cameraPoint[0], cameraPoint[1], cameraPoint[2], color="black")
-        ax.view_init(y_tilt, x_tilt)
-        plt.show()
-        plt.close()
-        y_tilt -= 45
-        x_tilt += 20
+    plt.figure()
+    ax = plt.axes(projection='3d')
+    plt.xlim(-10, 100)
+    plt.ylim(0, 150)
+    ax.set_zlim(0, 20)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+    ax.scatter(X_seen, Y_seen, Z_seen, color="green")
+    ax.scatter(X_obs, Y_obs, Z_obs, color="red")
+    ax.scatter(cameraPoint[0], cameraPoint[1], cameraPoint[2], color="black")
+    ax.view_init(30, 220)
+    plt.show()
+    plt.close()
 
 def get_planar_equations(surfaces):
     equations = []
     for j in surfaces:
-        # print(i)
+        # print(j)
         vector1 = [j[1][0] - j[0][0], j[1][1] - j[0][1], j[1][2] - j[0][2]]
         vector2 = [j[2][0] - j[0][0], j[2][1] - j[0][1], j[2][2] - j[0][2]]
         # print(vector1, vector2)
@@ -132,19 +124,31 @@ def get_plane(point, normal):
 
 
 if __name__ == "__main__":
+    with open("euro.txt") as palletFile:
+        palletSurfaceText = palletFile.read()
+        palletSurfaceText = palletSurfaceText.replace("[", "")
+        palletSurfaceText = palletSurfaceText.replace("]", "")
+        palletSurfaceText = palletSurfaceText.replace(" ", "")
+        #palletSurfaceText = palletSurfaceText.replace("\n0", "")
+        palletSurfaceText = palletSurfaceText.split(",")
+        palletSurfaceNum = []
+        points = []
+        for i in range(int(len(palletSurfaceText)/12.0)):
+            palletSurfaceFace = []
+            for j in range(4):
+                points.append([float(palletSurfaceText[i*12+j*3]), float(palletSurfaceText[i*12+1+j*3]), float(palletSurfaceText[i*12+2+j*3])])
+                palletSurfaceFace.append([float(palletSurfaceText[i*12+j*3]), float(palletSurfaceText[i*12+1+j*3]), float(palletSurfaceText[i*12+2+j*3])])
+            palletSurfaceNum.append(palletSurfaceFace)
     startTime = time.time()
     seenPoints = []
     obstructedPoints = []
 
-    c1 = Camera(0, 1, 0, (10, 10))
-    p1 = Pallet([
-        [[1, 0, 0], [1, 2, 0], [1, 2, 2], [1, 0, 2]]
-    ])
-    points = [(2, 1, 1), (2,1,0), (2,1,3), (2,1,4), (2,1,4.1)]
+    c1 = Camera(5, -20, 10, (10, 10))
+    p1 = Pallet(palletSurfaceNum)
     for i in points:
-        possibleObstructions = c1.check_possible_obstructions(i, p1.faces)
-        pointObstructed = c1.check_FOV(i, possibleObstructions, 1000)
-        print(pointObstructed)
+        #possibleObstructions = c1.check_possible_obstructions(i, p1.faces)
+        pointObstructed = c1.check_FOV(i, p1.faces, 100)
+        #print(pointObstructed)
         if pointObstructed:
             obstructedPoints.append(i)
         else:
