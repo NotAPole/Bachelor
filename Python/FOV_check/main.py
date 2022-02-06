@@ -38,7 +38,7 @@ class Camera:
     def check_FOV(self, point, possibleObstructions, step):
         planarEquations = get_planar_equations(possibleObstructions)
         x, y, z = self.calculate_coordinates(point, step)
-        conObs = self.check_for_obstructions(planarEquations, possibleObstructions, x, y, z, point)
+        conObs = self.check_for_obstructions(planarEquations, possibleObstructions, x, y, z, point, step)
 
         return conObs
 
@@ -49,25 +49,27 @@ class Camera:
 
         return x, y, z
 
-    def check_for_obstructions(self, equations, surfaces, x, y, z, point):
-        threshold = 1
-        for j in range(len(x)):
-            for k, l in enumerate(equations):
-                planar_result = l[0]*(x[j]-l[1]) + l[2]*(y[j]-l[3]) + l[4]*(z[j]-l[5])
-                crossingPlane = abs(planar_result) < threshold
+    def check_for_obstructions(self, equations, surfaces, x, y, z, point, step):
+        thresholdCrossing = 0.2
+        thresholdPlane = 0.3
+        for j in range(step):
+            for k, l in enumerate(equations[0:1]):
+                planar_result = abs(l[0]*(x[j]-l[1])) + abs(l[2]*(y[j]-l[3])) + abs(l[4]*(z[j]-l[5]))
+                #print(planar_result)
+                crossingPlane = abs(planar_result) < thresholdCrossing
                 if crossingPlane:
-                    print("crossed at", [x[j], y[j], z[j]], "going to", point)
-                    corners_x = (np.min([surfaces[k][0][0],surfaces[k][1][0],surfaces[k][2][0],surfaces[k][3][0]]), np.max([surfaces[k][0][0],surfaces[k][1][0],surfaces[k][2][0],surfaces[k][3][0]]))
-                    corners_y = (np.min([surfaces[k][0][1],surfaces[k][1][1],surfaces[k][2][1],surfaces[k][3][1]]), np.max([surfaces[k][0][1],surfaces[k][1][1],surfaces[k][2][1],surfaces[k][3][1]]))
-                    corners_z = (np.min([surfaces[k][0][2],surfaces[k][1][2],surfaces[k][2][2],surfaces[k][3][2]]), np.max([surfaces[k][0][2],surfaces[k][1][2],surfaces[k][2][2],surfaces[k][3][2]]))
-                    
-                    print(np.min(corners_x) <= x[j] <= np.max(corners_x), np.min(corners_y) <= y[j] <= np.max(
-                        corners_y), np.min(corners_z) <= z[j] <= np.max(corners_z),
+                    corners_x = (np.min([surfaces[k][0][0], surfaces[k][1][0], surfaces[k][2][0], surfaces[k][3][0]]), np.max([surfaces[k][0][0], surfaces[k][1][0], surfaces[k][2][0], surfaces[k][3][0]]))
+                    corners_y = (np.min([surfaces[k][0][1], surfaces[k][1][1], surfaces[k][2][1], surfaces[k][3][1]]), np.max([surfaces[k][0][1], surfaces[k][1][1], surfaces[k][2][1], surfaces[k][3][1]]))
+                    corners_z = (np.min([surfaces[k][0][2], surfaces[k][1][2], surfaces[k][2][2], surfaces[k][3][2]]), np.max([surfaces[k][0][2], surfaces[k][1][2], surfaces[k][2][2], surfaces[k][3][2]]))
+                    print([x[j], y[j], z[j]], point, surfaces[k][0], surfaces[k][1], surfaces[k][2], surfaces[k][3],
+                          (corners_x[0] - 0.1) <= x[j] <= (corners_x[1] + thresholdPlane),
+                          (corners_y[0] - thresholdPlane) <= y[j] <= (corners_y[1] + thresholdPlane),
+                          (corners_z[0] - thresholdPlane) <= z[j] <= (corners_z[1] + thresholdPlane),
                           not ([x[j], y[j], z[j]] == point))
-                    conObs = corners_x[0] <= x[j] <= corners_x[1] and corners_y[0] <= y[j] <= corners_y[1] and corners_z[0] <= z[j] <= corners_z[1] and not([x[j], y[j], z[j]] == point)
+                    conObs = (corners_x[0] - 0.1) <= x[j] <= (corners_x[1] + thresholdPlane) and (corners_y[0] - thresholdPlane) <= y[j] <= (corners_y[1] + thresholdPlane) and (corners_z[0] - thresholdPlane) <= z[j] <= (corners_z[1] + thresholdPlane) and not(x[j]-thresholdPlane <= point[0] <= x[j]+thresholdPlane and y[j] - thresholdPlane <= point[1] <= y[j] + thresholdPlane and z[j] - thresholdPlane <= point[2] <= z[j] + thresholdPlane)
 
                     if conObs:
-                        print(x[j], y[j], z[j], surfaces[k][0], surfaces[k][1], surfaces[k][2], surfaces[k][3])
+                        print("obstructed")
                         return True
 
         return False
@@ -103,7 +105,6 @@ def show_plots(seenPoints, obstructedPoints, palletFaces, cameraPoint):
     ax.scatter(cameraPoint[0], cameraPoint[1], cameraPoint[2], color="black")
     ax.view_init(30, 220)
     plt.show()
-    plt.close()
 
 def get_planar_equations(surfaces):
     equations = []
@@ -129,32 +130,37 @@ if __name__ == "__main__":
         palletSurfaceText = palletSurfaceText.replace("[", "")
         palletSurfaceText = palletSurfaceText.replace("]", "")
         palletSurfaceText = palletSurfaceText.replace(" ", "")
-        #palletSurfaceText = palletSurfaceText.replace("\n0", "")
         palletSurfaceText = palletSurfaceText.split(",")
         palletSurfaceNum = []
         points = []
         for i in range(int(len(palletSurfaceText)/12.0)):
-            palletSurfaceFace = []
+            palletSurfaceTemp = []
             for j in range(4):
                 points.append([float(palletSurfaceText[i*12+j*3]), float(palletSurfaceText[i*12+1+j*3]), float(palletSurfaceText[i*12+2+j*3])])
-                palletSurfaceFace.append([float(palletSurfaceText[i*12+j*3]), float(palletSurfaceText[i*12+1+j*3]), float(palletSurfaceText[i*12+2+j*3])])
-            palletSurfaceNum.append(palletSurfaceFace)
+                palletSurfaceTemp.append([float(palletSurfaceText[i*12+j*3]), float(palletSurfaceText[i*12+1+j*3]), float(palletSurfaceText[i*12+2+j*3])])
+            palletSurfaceNum.append(palletSurfaceTemp)
     startTime = time.time()
     seenPoints = []
     obstructedPoints = []
 
-    c1 = Camera(5, -20, 10, (10, 10))
+
+    c1 = Camera(5, -50, 6, (10, 10))
     p1 = Pallet(palletSurfaceNum)
+    #show_plots(points, obstructedPoints, p1.faces, (c1.x, c1.y, c1.z))
+    point = points[-40:]
     for i in points:
+        if i in point:
+            points.remove(i)
+    for i in point:
         #possibleObstructions = c1.check_possible_obstructions(i, p1.faces)
-        pointObstructed = c1.check_FOV(i, p1.faces, 100)
+        pointObstructed = c1.check_FOV(i, p1.faces, 10000)
         #print(pointObstructed)
         if pointObstructed:
             obstructedPoints.append(i)
         else:
             seenPoints.append(i)
-
-    show_plots(seenPoints, obstructedPoints, p1.faces, (c1.x, c1.y, c1.z))
+    show_plots(seenPoints, points[:-40], p1.faces, (c1.x, c1.y, c1.z))
+    #show_plots(seenPoints, obstructedPoints, p1.faces, (c1.x, c1.y, c1.z))
     print("Total time used:", time.time()-startTime)
 
 
