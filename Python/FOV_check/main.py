@@ -53,7 +53,7 @@ class Camera:
         return x, y, z
 
     def check_for_obstructions(self, equations, surfaces, x, y, z, point, step):
-        thresholdCrossing = 0.01
+        thresholdCrossing = 0.008
         thresholdPoint = 0.5
         for j in range(step):
             for k, l in enumerate(equations):
@@ -71,7 +71,6 @@ class Camera:
                     conObs = (corners_x[0] - 0.1) <= x[j] <= (corners_x[1] + thresholdPoint) and (corners_y[0] - thresholdPoint) <= y[j] <= (corners_y[1] + thresholdPoint) and (corners_z[0] - thresholdPoint) <= z[j] <= (corners_z[1] + thresholdPoint) and not(point[0]-thresholdPoint <= x[j] <= point[0]+thresholdPoint and point[1] - thresholdPoint <= y[j] <= point[1] + thresholdPoint and point[2] - thresholdPoint <= z[j] <= point[2] + thresholdPoint)
 
                     if conObs:
-                        print("obstructed")
                         return True
 
         return False
@@ -130,6 +129,7 @@ def get_plane(point, normal):
 
 
 if __name__ == "__main__":
+    startTime = time.time()
     with open("euro.txt") as palletFile:
         palletSurfaceText = palletFile.read()
         palletSurfaceText = palletSurfaceText.replace("[", "")
@@ -144,15 +144,14 @@ if __name__ == "__main__":
                 points.append([float(palletSurfaceText[i*12+j*3]), float(palletSurfaceText[i*12+1+j*3]), float(palletSurfaceText[i*12+2+j*3])])
                 palletSurfaceTemp.append([float(palletSurfaceText[i*12+j*3]), float(palletSurfaceText[i*12+1+j*3]), float(palletSurfaceText[i*12+2+j*3])])
             palletSurfaceNum.append(palletSurfaceTemp)
-    startTime = time.time()
+
     seenPoints = []
     obstructedPoints = []
-
 
     c1 = Camera(62.5, 60, 50, (10, 10))
     p1 = Pallet(palletSurfaceNum)
     #show_plots(points, obstructedPoints, p1.faces, (c1.x, c1.y, c1.z))
-    point = points[-5:-4]
+    #point = points[-5:-4]
     #for i in range(0, len(points), 4):
     #    print([points[i], points[i+1], points[i+2], points[i+3]])
     #    show_plots([points[i], points[i+1], points[i+2], points[i+3]], [], p1.faces, (c1.x, c1.y, c1.z))
@@ -163,17 +162,16 @@ if __name__ == "__main__":
 
     for i in points:
         #possibleObstructions = c1.check_possible_obstructions(i, p1.faces)
-        pointObstructed = c1.check_FOV(i, p1.faces, 5000)
-        #print(pointObstructed)
+        pointObstructed = c1.check_FOV(i, p1.faces, 3000)
         if pointObstructed:
             obstructedPoints.append(i)
         else:
             seenPoints.append(i)
 
     #show_plots(seenPoints, points[:-40], p1.faces, (c1.x, c1.y, c1.z))
-    print(seenPoints)
+    print("Total time used:", time.time() - startTime)
     show_plots(seenPoints, obstructedPoints, p1.faces, (c1.x, c1.y, c1.z))
-    print("Total time used:", time.time()-startTime)
+
 
 
 
