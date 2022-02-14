@@ -84,11 +84,30 @@ class Camera:
         unitFocusVector = self.get_focus_vector()
 
         xyVectors = self.get_spread_vectors_xy(unitFocusVector, self.FOV[0])
+        plt.figure()
+        ax = plt.axes(projection='3d')
+        plt.xlim(-10, 100)
+        plt.ylim(0, 150)
+        ax.set_zlim(0, 20)
+        ax.plot((xyVectors[0][0]+self.x, xyVectors[0][0]*100+self.x), (xyVectors[0][1]+self.y, xyVectors[0][1]*100+self.y), (xyVectors[0][2]+self.z, xyVectors[0][2]*100+self.z))
+        plt.show()
         #zVectors = self.get_spread_vectors_z(unitFocusVector, self.FOV[1])
         for i in points:
             dist = np.sqrt((i[0] - self.x) ** 2 + (i[1] - self.y)**2 + (i[2] - self.z) ** 2)
             if dist <= self.range:
-                pass
+                xLimits = [np.min([xyVectors[0][0] * dist, xyVectors[1][0] * dist]), np.max([xyVectors[0][0] * dist, xyVectors[1][0] * dist])]
+                yLimits = [np.min([xyVectors[0][1] * dist, xyVectors[1][1] * dist]), np.max([xyVectors[0][1] * dist, xyVectors[1][1] * dist])]
+
+                if xLimits[0] <= i[0]+self.x <= xLimits[1] and yLimits[0] <= i[1]+self.y <= yLimits[1]:
+                    print("inside")
+                    possiblePoints.append(i)
+                else:
+                    print(unitFocusVector)
+                    print(xyVectors)
+                    print(yLimits, i[1])
+                    pointsOutsideFOV.append(i)
+            else:
+                pointsOutsideFOV.append(i)
 
         return possiblePoints, pointsOutsideFOV
 
@@ -100,7 +119,6 @@ class Camera:
     @staticmethod
     def get_spread_vectors_xy(focusVector, spread):
         spreadRad = spread*np.pi/180
-        print(focusVector, spread)
         rotationalMatrix1 = [
             [np.cos(spreadRad / 2), -np.sin(spreadRad / 2), 0],
             [np.sin(spreadRad / 2), np.cos(spreadRad / 2), 0],
@@ -118,9 +136,11 @@ class Camera:
 
     @staticmethod
     def get_spread_vectors_z(focusVector, spread):
+        vectors = []
         spreadRad = spread*np.pi/180
         print(focusVector)
         return vectors
+
 
 class Pallet:
     def __init__(self, faces):
@@ -181,9 +201,9 @@ def main():
     palletSurfaceNum, remainingPoints = read_file("euro.txt")
 
     cameras = []
-    cameras.append(Camera(40, 60, 50, (10, 10), (0, 0, 0), 150))
-    # cameras.append(Camera(40, 60, -50, (10, 10), (0, 0, 0)))
-    cameras.append(Camera(-20, -20, 7, (10, 10), (0, 0, 0), 150))
+    cameras.append(Camera(40, 60, 50, (10, 10), (0, 0, 0), 400))
+    #cameras.append(Camera(40, 60, -50, (10, 10), (0, 0, 0)))
+    #cameras.append(Camera(-20, -20, 7, (10, 10), (0, 0, 0), 400))
     p1 = Pallet(palletSurfaceNum)
 
     seenPoints = []
