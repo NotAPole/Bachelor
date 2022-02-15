@@ -8,8 +8,6 @@ a camera is represented by a single point in space facing a specified direction 
 the resulting 3D-plot show green and red points. green means seen, red means unseen.
 """
 import time
-
-import numpy
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -84,13 +82,13 @@ class Camera:
         unitFocusVector = self.get_focus_vector()
 
         xyVectors = self.get_spread_vectors_xy(unitFocusVector, self.FOV[0])
-        plt.figure()
-        ax = plt.axes(projection='3d')
-        plt.xlim(-10, 100)
-        plt.ylim(0, 150)
-        ax.set_zlim(0, 20)
-        ax.plot((xyVectors[0][0]+self.x, xyVectors[0][0]*100+self.x), (xyVectors[0][1]+self.y, xyVectors[0][1]*100+self.y), (xyVectors[0][2]+self.z, xyVectors[0][2]*100+self.z))
-        plt.show()
+        #plt.figure()
+        #ax = plt.axes(projection='3d')
+        #plt.xlim(-10, 100)
+        #plt.ylim(0, 150)
+        #ax.set_zlim(0, 20)
+        #ax.plot((xyVectors[0][0]+self.x, xyVectors[0][0]*100+self.x), (xyVectors[0][1]+self.y, xyVectors[0][1]*100+self.y), (xyVectors[0][2]+self.z, xyVectors[0][2]*100+self.z))
+        #plt.show()
         #zVectors = self.get_spread_vectors_z(unitFocusVector, self.FOV[1])
         for i in points:
             dist = np.sqrt((i[0] - self.x) ** 2 + (i[1] - self.y)**2 + (i[2] - self.z) ** 2)
@@ -112,7 +110,7 @@ class Camera:
         return possiblePoints, pointsOutsideFOV
 
     def get_focus_vector(self):
-        vector = numpy.array([self.focus[0]-self.x, self.focus[1]-self.y, self.focus[2]-self.z])
+        vector = np.array([self.focus[0]-self.x, self.focus[1]-self.y, self.focus[2]-self.z])
 
         return vector / ((vector ** 2).sum() ** 0.5)
 
@@ -175,9 +173,9 @@ def show_plots(seenPoints, obstructedPoints, cameras):
 
     plt.figure()
     ax = plt.axes(projection='3d')
-    plt.xlim(-10, 100)
-    plt.ylim(0, 150)
-    ax.set_zlim(0, 20)
+    plt.xlim(-100, 100)
+    plt.ylim(-100, 200)
+    ax.set_zlim(-100, 50)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
@@ -194,23 +192,24 @@ def get_plane(point, normal):
 
 
 def main():
-    steps = 1000
-    thresholdSurface = 0.005
+    steps = 10000
+    thresholdSurface = 0.001
     thresholdPoint = 0.02
     startTime = time.time()
     palletSurfaceNum, remainingPoints = read_file("euro.txt")
 
     cameras = []
-    cameras.append(Camera(40, 60, 50, (10, 10), (0, 0, 0), 400))
-    #cameras.append(Camera(40, 60, -50, (10, 10), (0, 0, 0)))
-    #cameras.append(Camera(-20, -20, 7, (10, 10), (0, 0, 0), 400))
+    cameras.append(Camera(-74.7, -125.3, -86, (10, 10), (0, 0, 0), 9000))
+    cameras.append(Camera(116.4, 257.2, -86, (10, 10), (0, 0, 0), 9000))
+    cameras.append(Camera(60, 260, 93, (10, 10), (0, 0, 0), 9000))
     p1 = Pallet(palletSurfaceNum)
 
     seenPoints = []
     currentCamera = 1
     for i in cameras:
-        remainingPoints, obstructedPoints = i.check_points_in_FOV(remainingPoints)
+        #remainingPoints, obstructedPoints = i.check_points_in_FOV(remainingPoints)
         cameraProgress = 0
+        obstructedPoints = []
         for j in remainingPoints:
             pointObstructed = i.check_FOV(j, p1.faces, p1.equations, steps, thresholdSurface, thresholdPoint)
             if pointObstructed:
@@ -250,6 +249,66 @@ def read_file(file):
         for j in remainingPoints:
             if remainingPoints.count(j) > 1:
                 remainingPoints.remove(j)
+
+        for j in palletSurfaceNum:
+            if j[0][0] != j[1][0]:
+                for k in np.linspace(j[0][0], j[1][0], 5, endpoint=False):
+                    remainingPoints.append([k, j[0][1], j[0][2]])
+                for k in np.linspace(j[2][0], j[3][0], 5, endpoint=False):
+                    remainingPoints.append([k, j[2][1], j[2][2]])
+
+                if j[1][1] != j[2][1]:
+                    for k in np.linspace(j[1][1], j[2][1], 5, endpoint=False):
+                        remainingPoints.append([j[1][0], k, j[1][2]])
+                    for k in np.linspace(j[3][1], j[0][1], 5, endpoint=False):
+                        remainingPoints.append([j[3][0], k, j[3][2]])
+
+                if j[1][2] != j[2][2]:
+                    for k in np.linspace(j[1][2], j[2][2], 5, endpoint=False):
+                        remainingPoints.append([j[1][0], j[1][1], k])
+                    for k in np.linspace(j[3][2], j[0][2], 5, endpoint=False):
+                        remainingPoints.append([j[3][0], j[3][1], k])
+
+            if j[0][1] != j[1][1]:
+                for k in np.linspace(j[0][1], j[1][1], 5, endpoint=False):
+                    remainingPoints.append([j[0][0], k, j[0][2]])
+                for k in np.linspace(j[2][1], j[3][1], 5, endpoint=False):
+                    remainingPoints.append([j[3][0], k, j[2][2]])
+
+                if j[1][0] != j[2][0]:
+                    for k in np.linspace(j[1][0], j[2][0], 5, endpoint=False):
+                        remainingPoints.append([k, j[1][1], j[1][2]])
+                    for k in np.linspace(j[3][0], j[0][0], 5, endpoint=False):
+                        remainingPoints.append([k, j[3][1], j[3][2]])
+
+                if j[1][2] != j[2][2]:
+                    for k in np.linspace(j[1][2], j[2][2], 5, endpoint=False):
+                        remainingPoints.append([j[1][0], j[1][1], k])
+                    for k in np.linspace(j[3][2], j[0][2], 5, endpoint=False):
+                        remainingPoints.append([j[3][0], j[3][1], k])
+
+            if j[0][2] != j[1][2]:
+                for k in np.linspace(j[0][2], j[1][2], 5, endpoint=False):
+                    remainingPoints.append([j[0][0], j[0][1], k])
+                for k in np.linspace(j[2][0], j[3][0], 5, endpoint=False):
+                    remainingPoints.append([[j[2][0]], j[2][1], k])
+
+                if j[1][0] != j[2][0]:
+                    for k in np.linspace(j[1][0], j[2][0], 5, endpoint=False):
+                        remainingPoints.append([k, j[1][1], j[1][2]])
+                    for k in np.linspace(j[3][0], j[0][0], 5, endpoint=False):
+                        remainingPoints.append([k, j[3][1], j[3][2]])
+
+                if j[1][1] != j[2][1]:
+                    for k in np.linspace(j[1][1], j[2][1], 5, endpoint=False):
+                        remainingPoints.append([j[1][0], k, j[1][2]])
+                    for k in np.linspace(j[3][1], j[0][1], 5, endpoint=False):
+                        remainingPoints.append([j[3][0], k, j[3][2]])
+
+        for j in remainingPoints:
+            if remainingPoints.count(j) > 1:
+                remainingPoints.remove(j)
+
     return palletSurfaceNum, remainingPoints
 
 
