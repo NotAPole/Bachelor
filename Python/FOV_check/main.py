@@ -56,6 +56,7 @@ class Camera:
         for j in range(step):
             for k, l in enumerate(equations):
                 planar_result = l[0] * (x[j] - l[1]) + l[2] * (y[j] - l[3]) + l[4] * (z[j] - l[5])
+                print(planar_result, k, l)
                 crossingPlane = abs(planar_result) < thresholdCrossing
                 if crossingPlane:
                     corners_x = (np.min([surfaces[k][0][0], surfaces[k][1][0], surfaces[k][2][0], surfaces[k][3][0]]),
@@ -72,6 +73,7 @@ class Camera:
                                   point[2] - thresholdPoint <= z[j] <= point[2] + thresholdPoint)
 
                     if conObs:
+                        print("obstructed", (x[j], y[j], z[j]), point)
                         return True
 
         return False
@@ -201,7 +203,7 @@ def main():
     cameras = []
     cameras.append(Camera(-74.7, -125.3, -86, (10, 10), (0, 0, 0), 9000))
     cameras.append(Camera(116.4, 257.2, -86, (10, 10), (0, 0, 0), 9000))
-    cameras.append(Camera(60, 260, 93, (10, 10), (0, 0, 0), 9000))
+    cameras.append(Camera(60, 260, 94.4, (10, 10), (0, 0, 0), 9000))
     p1 = Pallet(palletSurfaceNum)
 
     seenPoints = []
@@ -229,6 +231,7 @@ def main():
 
 def read_file(file):
     with open(file) as palletFile:
+        additionalPoints = 10
         palletSurfaceText = palletFile.read()
         palletSurfaceText = palletSurfaceText.replace("[", "")
         palletSurfaceText = palletSurfaceText.replace("]", "")
@@ -252,57 +255,57 @@ def read_file(file):
 
         for j in palletSurfaceNum:
             if j[0][0] != j[1][0]:
-                for k in np.linspace(j[0][0], j[1][0], 5, endpoint=False):
+                for k in np.linspace(j[0][0], j[1][0], additionalPoints, endpoint=False):
                     remainingPoints.append([k, j[0][1], j[0][2]])
-                for k in np.linspace(j[2][0], j[3][0], 5, endpoint=False):
+                for k in np.linspace(j[2][0], j[3][0], additionalPoints, endpoint=False):
                     remainingPoints.append([k, j[2][1], j[2][2]])
 
                 if j[1][1] != j[2][1]:
-                    for k in np.linspace(j[1][1], j[2][1], 5, endpoint=False):
+                    for k in np.linspace(j[1][1], j[2][1], additionalPoints, endpoint=False):
                         remainingPoints.append([j[1][0], k, j[1][2]])
-                    for k in np.linspace(j[3][1], j[0][1], 5, endpoint=False):
+                    for k in np.linspace(j[3][1], j[0][1], additionalPoints, endpoint=False):
                         remainingPoints.append([j[3][0], k, j[3][2]])
 
                 if j[1][2] != j[2][2]:
-                    for k in np.linspace(j[1][2], j[2][2], 5, endpoint=False):
+                    for k in np.linspace(j[1][2], j[2][2], additionalPoints, endpoint=False):
                         remainingPoints.append([j[1][0], j[1][1], k])
-                    for k in np.linspace(j[3][2], j[0][2], 5, endpoint=False):
+                    for k in np.linspace(j[3][2], j[0][2], additionalPoints, endpoint=False):
                         remainingPoints.append([j[3][0], j[3][1], k])
 
             if j[0][1] != j[1][1]:
-                for k in np.linspace(j[0][1], j[1][1], 5, endpoint=False):
+                for k in np.linspace(j[0][1], j[1][1], additionalPoints, endpoint=False):
                     remainingPoints.append([j[0][0], k, j[0][2]])
-                for k in np.linspace(j[2][1], j[3][1], 5, endpoint=False):
+                for k in np.linspace(j[2][1], j[3][1], additionalPoints, endpoint=False):
                     remainingPoints.append([j[3][0], k, j[2][2]])
 
                 if j[1][0] != j[2][0]:
-                    for k in np.linspace(j[1][0], j[2][0], 5, endpoint=False):
+                    for k in np.linspace(j[1][0], j[2][0], additionalPoints, endpoint=False):
                         remainingPoints.append([k, j[1][1], j[1][2]])
-                    for k in np.linspace(j[3][0], j[0][0], 5, endpoint=False):
+                    for k in np.linspace(j[3][0], j[0][0], additionalPoints, endpoint=False):
                         remainingPoints.append([k, j[3][1], j[3][2]])
 
                 if j[1][2] != j[2][2]:
-                    for k in np.linspace(j[1][2], j[2][2], 5, endpoint=False):
+                    for k in np.linspace(j[1][2], j[2][2], additionalPoints, endpoint=False):
                         remainingPoints.append([j[1][0], j[1][1], k])
-                    for k in np.linspace(j[3][2], j[0][2], 5, endpoint=False):
+                    for k in np.linspace(j[3][2], j[0][2], additionalPoints, endpoint=False):
                         remainingPoints.append([j[3][0], j[3][1], k])
 
             if j[0][2] != j[1][2]:
-                for k in np.linspace(j[0][2], j[1][2], 5, endpoint=False):
+                for k in np.linspace(j[0][2], j[1][2], additionalPoints, endpoint=False):
                     remainingPoints.append([j[0][0], j[0][1], k])
-                for k in np.linspace(j[2][0], j[3][0], 5, endpoint=False):
+                for k in np.linspace(j[2][0], j[3][0], additionalPoints, endpoint=False):
                     remainingPoints.append([[j[2][0]], j[2][1], k])
 
                 if j[1][0] != j[2][0]:
-                    for k in np.linspace(j[1][0], j[2][0], 5, endpoint=False):
+                    for k in np.linspace(j[1][0], j[2][0], additionalPoints, endpoint=False):
                         remainingPoints.append([k, j[1][1], j[1][2]])
-                    for k in np.linspace(j[3][0], j[0][0], 5, endpoint=False):
+                    for k in np.linspace(j[3][0], j[0][0], additionalPoints, endpoint=False):
                         remainingPoints.append([k, j[3][1], j[3][2]])
 
                 if j[1][1] != j[2][1]:
-                    for k in np.linspace(j[1][1], j[2][1], 5, endpoint=False):
+                    for k in np.linspace(j[1][1], j[2][1], additionalPoints, endpoint=False):
                         remainingPoints.append([j[1][0], k, j[1][2]])
-                    for k in np.linspace(j[3][1], j[0][1], 5, endpoint=False):
+                    for k in np.linspace(j[3][1], j[0][1], additionalPoints, endpoint=False):
                         remainingPoints.append([j[3][0], k, j[3][2]])
 
         for j in remainingPoints:
