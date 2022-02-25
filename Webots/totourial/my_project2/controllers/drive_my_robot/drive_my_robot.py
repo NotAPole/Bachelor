@@ -15,8 +15,8 @@ if __name__ == "__main__":
     max_speed = 6.28
     
     #Created motor instance 
-    left_motor = robot.getmotor('motor_1')
-    right_motor = robot.getmotor('motor_2')
+    left_motor = robot.getDevice('motor_1')
+    right_motor = robot.getDevice('motor_2')
  
     left_motor.setPosition(float('inf'))
     left_motor.setVelocity(0.0)
@@ -28,8 +28,8 @@ if __name__ == "__main__":
     # - perform simulation steps until Webots is stopping the controller
     while robot.step(timestep) != -1:
     
-        left_speed = 0.5 * max_speed
-        right_speed = 0.5 * max_speed
+        left_speed = - 0.5 * max_speed
+        right_speed = - 0.2 * max_speed
         
         left_motor.setVelocity(left_speed)
         right_motor.setVelocity(right_speed) 
