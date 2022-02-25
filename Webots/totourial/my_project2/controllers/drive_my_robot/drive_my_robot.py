@@ -12,7 +12,7 @@ if __name__ == "__main__":
     
     # get the time step of the current world.
     timestep = 64
-    max_speed = - 6.28
+    max_speed = 6.28
     
     #Created motor instance 
     left_motor = robot.getDevice('motor_1')

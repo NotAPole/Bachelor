@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.2642170338625393 0.3857907678926968 0.883942782325669 1.1182634696248557
-  position -0.7767375339437745 -1.2855661238650016 0.8341406042614218
+  orientation 0.23795463225594496 0.14901135008974734 -0.9597776880780094 2.2423226345211775
+  position 0.9374609301650663 1.3902455305365602 0.930102001877117
 }
 TexturedBackground {
 }
@@ -81,7 +81,7 @@ Robot {
       }
     }
     Solid {
-      translation 0.015 0.045 0.07
+      translation 0.015 -0.045 0.07
       children [
         DEF eye Shape {
           appearance PBRAppearance {
@@ -97,7 +97,7 @@ Robot {
       name "solid(2)"
     }
     Solid {
-      translation -0.015 0.045 0.07
+      translation -0.015 -0.045 0.07
       children [
         USE eye
       ]
