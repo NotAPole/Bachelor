@@ -12,7 +12,7 @@ if __name__ == "__main__":
     
     # get the time step of the current world.
     timestep = 64
-    max_speed = 6.28
+    max_speed = - 6.28
     
     #Created motor instance 
     left_motor = robot.getDevice('motor_1')
@@ -28,8 +28,8 @@ if __name__ == "__main__":
     # - perform simulation steps until Webots is stopping the controller
     while robot.step(timestep) != -1:
     
-        left_speed = - 0.5 * max_speed
-        right_speed = - 0.2 * max_speed
+        left_speed = 0.5 * max_speed
+        right_speed = max_speed
         
         left_motor.setVelocity(left_speed)
         right_motor.setVelocity(right_speed) 
