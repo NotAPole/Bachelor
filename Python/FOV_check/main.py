@@ -2,14 +2,15 @@
 README
 
 @author: Pål-André Furnes
-this project is developed to be used for proof-of-concept in my bachelor thesis.
-a pallet is represented by an array of 3D points.
-a camera is represented by a single point in space facing a specified direction with a specified field of view.
-the resulting 3D-plot show green and red points. green means seen, red means unseen.
+This project is developed to be used for proof-of-concept in my bachelor thesis.
+A pallet is represented by an array of 3D points.
+A camera is represented by a single point in space facing a specified direction with a specified field of view.
+The resulting 3D-plot show green and red points. green means seen, red means unseen.
 """
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import multiprocessing
 
 
 class Camera:
@@ -56,7 +57,7 @@ class Camera:
         for j in range(step):
             for k, l in enumerate(equations):
                 planar_result = l[0] * (x[j] - l[1]) + l[2] * (y[j] - l[3]) + l[4] * (z[j] - l[5])
-                print(planar_result, k, l)
+                #print(planar_result, k, l)
                 crossingPlane = abs(planar_result) < thresholdCrossing
                 if crossingPlane:
                     corners_x = (np.min([surfaces[k][0][0], surfaces[k][1][0], surfaces[k][2][0], surfaces[k][3][0]]),
@@ -73,7 +74,7 @@ class Camera:
                                   point[2] - thresholdPoint <= z[j] <= point[2] + thresholdPoint)
 
                     if conObs:
-                        print("obstructed", (x[j], y[j], z[j]), point)
+                        #print("obstructed", (x[j], y[j], z[j]), point)
                         return True
 
         return False
@@ -189,130 +190,169 @@ def show_plots(seenPoints, obstructedPoints, cameras):
     plt.show()
 
 
+def show_camera_FOV(camera):
+    pass
+
+
 def get_plane(point, normal):
     return normal[0], point[0], normal[1], point[1], normal[2], point[2]
 
 
 def main():
+    debug = False
+    useMultiProcessing = False
     steps = 10000
-    thresholdSurface = 0.001
+    additionalPoints = 10
+    thresholdSurface = 1/steps*20
     thresholdPoint = 0.02
     startTime = time.time()
-    palletSurfaceNum, remainingPoints = read_file("euro.txt")
+    palletSurfaceNum, initialPoints = read_file("euro.txt", additionalPoints)
 
-    cameras = []
-    cameras.append(Camera(-74.7, -125.3, -86, (10, 10), (0, 0, 0), 9000))
-    cameras.append(Camera(116.4, 257.2, -86, (10, 10), (0, 0, 0), 9000))
-    cameras.append(Camera(60, 260, 94.4, (10, 10), (0, 0, 0), 9000))
-    p1 = Pallet(palletSurfaceNum)
+    if debug:
+        camera = Camera(-45, -45, 0, (10, 10), (0, 0, 0), 9000)
+        show_camera_FOV(camera)
 
-    seenPoints = []
-    currentCamera = 1
-    for i in cameras:
-        #remainingPoints, obstructedPoints = i.check_points_in_FOV(remainingPoints)
-        cameraProgress = 0
+    else:
+        cameras = []
+        cameras.append(Camera(-74.7, -125.3, -86, (10, 10), (0, 0, 0), 9000))
+        cameras.append(Camera(116.4, 257.2, -86, (10, 10), (0, 0, 0), 9000))
+        cameras.append(Camera(60, 260, 94.4, (10, 10), (0, 0, 0), 9000))
+        #cameras.append(Camera(40, 60, -100, (10, 10), (0, 0, 0), 9000))
+        p1 = Pallet(palletSurfaceNum)
+        if useMultiProcessing:
+            manager = multiprocessing.Manager()
+            seenPoints = manager.list()
+            processPool = []
+            for i, c in enumerate(cameras):
+                #remainingPoints, obstructedPoints = c.check_points_in_FOV(initialPoints)
+                processPool.append(multiprocessing.Process(target=check_FOV, args=(c, i+1, p1, initialPoints, steps, thresholdPoint, thresholdSurface, seenPoints)))
+                processPool[i].start()
+            for process in processPool:
+                process.join()
+
+            for i in seenPoints:
+                if seenPoints.count(i) > 1:
+                    seenPoints.remove(i)
+        else:
+            seenPoints = []
+            remainingPoints = initialPoints
+            for i, c in enumerate(cameras):
+                seenPointsCamera = check_FOV(c, i+1, p1, remainingPoints, steps, thresholdPoint, thresholdSurface)
+                remainingPoints = []
+                for j in seenPointsCamera:
+                    seenPoints.append(j)
+                for j in initialPoints:
+                    if j not in seenPoints:
+                        remainingPoints.append(j)
+
         obstructedPoints = []
-        for j in remainingPoints:
-            pointObstructed = i.check_FOV(j, p1.faces, p1.equations, steps, thresholdSurface, thresholdPoint)
-            if pointObstructed:
-                obstructedPoints.append(j)
-            else:
-                seenPoints.append(j)
-            cameraProgress += 1
-            print("Camera " + str(currentCamera) + " " + str(
-                round(cameraProgress / len(remainingPoints) * 100, 2)) + "% done")
-        remainingPoints = obstructedPoints
-        currentCamera += 1
+        for i in initialPoints:
+            if i not in seenPoints:
+                obstructedPoints.append(i)
 
-    print("Total time used:", time.time() - startTime)
+        print("Total time used:", time.time() - startTime)
 
-    show_plots(seenPoints, obstructedPoints, cameras)
+        show_plots(seenPoints, obstructedPoints, cameras)
 
 
-def read_file(file):
+def check_FOV(c, currentCamera, pallet, remainingPoints, steps, thresholdPoint, thresholdSurface, seenPoints=[]):
+    cameraProgress = 0
+    for j in remainingPoints:
+        pointObstructed = c.check_FOV(j, pallet.faces, pallet.equations, steps, thresholdSurface, thresholdPoint)
+        if pointObstructed:
+            pass
+        else:
+            seenPoints.append(j)
+        cameraProgress += 1
+        print("Camera " + str(currentCamera) + " " + str(
+            round(cameraProgress / len(remainingPoints) * 100, 2)) + "% done")
+
+    return seenPoints
+
+
+def read_file(file, additionalPoints):
     with open(file) as palletFile:
-        additionalPoints = 10
         palletSurfaceText = palletFile.read()
         palletSurfaceText = palletSurfaceText.replace("[", "")
         palletSurfaceText = palletSurfaceText.replace("]", "")
         palletSurfaceText = palletSurfaceText.replace(" ", "")
         palletSurfaceText = palletSurfaceText.split(",")
         palletSurfaceNum = []
-        remainingPoints = []
+        initialPoints = []
         for i in range(int(len(palletSurfaceText) / 12.0)):
             palletSurfaceTemp = []
             for j in range(4):
-                remainingPoints.append([float(palletSurfaceText[i * 12 + j * 3]),
+                initialPoints.append([float(palletSurfaceText[i * 12 + j * 3]),
                                         float(palletSurfaceText[i * 12 + 1 + j * 3]),
                                         float(palletSurfaceText[i * 12 + 2 + j * 3])])
                 palletSurfaceTemp.append([float(palletSurfaceText[i * 12 + j * 3]),
                                           float(palletSurfaceText[i * 12 + 1 + j * 3]),
                                           float(palletSurfaceText[i * 12 + 2 + j * 3])])
             palletSurfaceNum.append(palletSurfaceTemp)
-        for j in remainingPoints:
-            if remainingPoints.count(j) > 1:
-                remainingPoints.remove(j)
+        for j in initialPoints:
+            if initialPoints.count(j) > 1:
+                initialPoints.remove(j)
 
         for j in palletSurfaceNum:
             if j[0][0] != j[1][0]:
                 for k in np.linspace(j[0][0], j[1][0], additionalPoints, endpoint=False):
-                    remainingPoints.append([k, j[0][1], j[0][2]])
+                    initialPoints.append([k, j[0][1], j[0][2]])
                 for k in np.linspace(j[2][0], j[3][0], additionalPoints, endpoint=False):
-                    remainingPoints.append([k, j[2][1], j[2][2]])
+                    initialPoints.append([k, j[2][1], j[2][2]])
 
                 if j[1][1] != j[2][1]:
                     for k in np.linspace(j[1][1], j[2][1], additionalPoints, endpoint=False):
-                        remainingPoints.append([j[1][0], k, j[1][2]])
+                        initialPoints.append([j[1][0], k, j[1][2]])
                     for k in np.linspace(j[3][1], j[0][1], additionalPoints, endpoint=False):
-                        remainingPoints.append([j[3][0], k, j[3][2]])
+                        initialPoints.append([j[3][0], k, j[3][2]])
 
                 if j[1][2] != j[2][2]:
                     for k in np.linspace(j[1][2], j[2][2], additionalPoints, endpoint=False):
-                        remainingPoints.append([j[1][0], j[1][1], k])
+                        initialPoints.append([j[1][0], j[1][1], k])
                     for k in np.linspace(j[3][2], j[0][2], additionalPoints, endpoint=False):
-                        remainingPoints.append([j[3][0], j[3][1], k])
+                        initialPoints.append([j[3][0], j[3][1], k])
 
             if j[0][1] != j[1][1]:
                 for k in np.linspace(j[0][1], j[1][1], additionalPoints, endpoint=False):
-                    remainingPoints.append([j[0][0], k, j[0][2]])
+                    initialPoints.append([j[0][0], k, j[0][2]])
                 for k in np.linspace(j[2][1], j[3][1], additionalPoints, endpoint=False):
-                    remainingPoints.append([j[3][0], k, j[2][2]])
+                    initialPoints.append([j[3][0], k, j[2][2]])
 
                 if j[1][0] != j[2][0]:
                     for k in np.linspace(j[1][0], j[2][0], additionalPoints, endpoint=False):
-                        remainingPoints.append([k, j[1][1], j[1][2]])
+                        initialPoints.append([k, j[1][1], j[1][2]])
                     for k in np.linspace(j[3][0], j[0][0], additionalPoints, endpoint=False):
-                        remainingPoints.append([k, j[3][1], j[3][2]])
+                        initialPoints.append([k, j[3][1], j[3][2]])
 
                 if j[1][2] != j[2][2]:
                     for k in np.linspace(j[1][2], j[2][2], additionalPoints, endpoint=False):
-                        remainingPoints.append([j[1][0], j[1][1], k])
+                        initialPoints.append([j[1][0], j[1][1], k])
                     for k in np.linspace(j[3][2], j[0][2], additionalPoints, endpoint=False):
-                        remainingPoints.append([j[3][0], j[3][1], k])
+                        initialPoints.append([j[3][0], j[3][1], k])
 
             if j[0][2] != j[1][2]:
                 for k in np.linspace(j[0][2], j[1][2], additionalPoints, endpoint=False):
-                    remainingPoints.append([j[0][0], j[0][1], k])
+                    initialPoints.append([j[0][0], j[0][1], k])
                 for k in np.linspace(j[2][0], j[3][0], additionalPoints, endpoint=False):
-                    remainingPoints.append([[j[2][0]], j[2][1], k])
+                    initialPoints.append([[j[2][0]], j[2][1], k])
 
                 if j[1][0] != j[2][0]:
                     for k in np.linspace(j[1][0], j[2][0], additionalPoints, endpoint=False):
-                        remainingPoints.append([k, j[1][1], j[1][2]])
+                        initialPoints.append([k, j[1][1], j[1][2]])
                     for k in np.linspace(j[3][0], j[0][0], additionalPoints, endpoint=False):
-                        remainingPoints.append([k, j[3][1], j[3][2]])
+                        initialPoints.append([k, j[3][1], j[3][2]])
 
                 if j[1][1] != j[2][1]:
                     for k in np.linspace(j[1][1], j[2][1], additionalPoints, endpoint=False):
-                        remainingPoints.append([j[1][0], k, j[1][2]])
+                        initialPoints.append([j[1][0], k, j[1][2]])
                     for k in np.linspace(j[3][1], j[0][1], additionalPoints, endpoint=False):
-                        remainingPoints.append([j[3][0], k, j[3][2]])
+                        initialPoints.append([j[3][0], k, j[3][2]])
 
-        for j in remainingPoints:
-            if remainingPoints.count(j) > 1:
-                remainingPoints.remove(j)
+        for j in initialPoints:
+            if initialPoints.count(j) > 1:
+                initialPoints.remove(j)
 
-    return palletSurfaceNum, remainingPoints
+    return palletSurfaceNum, initialPoints
 
 
 if __name__ == "__main__":
