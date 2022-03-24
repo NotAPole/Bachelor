@@ -114,8 +114,9 @@ class Camera:
 
     def get_focus_vector(self):
         vector = np.array([self.focus[0]-self.x, self.focus[1]-self.y, self.focus[2]-self.z])
+        unitVector = vector / np.linalg.norm(vector)
 
-        return vector / ((vector ** 2).sum() ** 0.5)
+        return unitVector
 
     @staticmethod
     def get_spread_vectors_xy(focusVector, spread):
@@ -123,24 +124,54 @@ class Camera:
         rotationalMatrix1 = [
             [np.cos(spreadRad / 2), -np.sin(spreadRad / 2), 0],
             [np.sin(spreadRad / 2), np.cos(spreadRad / 2), 0],
-            [0, 0, 1]
+            [0, 0, 0]
         ]
         rotationalMatrix2 = [
-            [np.cos(-spread / 2), -np.sin(-spread / 2), 0],
-            [np.sin(-spread / 2), np.cos(-spread / 2), 0],
-            [0, 0, 1]
+            [np.cos(-spreadRad / 2), -np.sin(-spreadRad / 2), 0],
+            [np.sin(-spreadRad / 2), np.cos(-spreadRad / 2), 0],
+            [0, 0, 0]
         ]
-
         vectors = [np.matmul(rotationalMatrix1, focusVector), np.matmul(rotationalMatrix2, focusVector)]
 
         return vectors
 
     @staticmethod
-    def get_spread_vectors_z(focusVector, spread):
-        vectors = []
+    def get_spread_vectors_z(focusVec, rotationPoints, spread):
+        fourDimensionFocusVec = np.array([[focusVec[0]],
+                                          [focusVec[1]],
+                                          [focusVec[2]],
+                                          [1]])
         spreadRad = spread*np.pi/180
-        print(focusVector)
-        return vectors
+
+        transposeMatrix1 = np.array([[1, 0, 0, -rotationPoints[0][0]],
+                                     [0, 1, 0, -rotationPoints[0][1]],
+                                     [0, 0, 1, -rotationPoints[0][2]],
+                                     [0, 0, 0, 1]])
+        invTransposeMatrix1 = np.linalg.inv(transposeMatrix1)
+
+        rotationalVector = np.array([rotationPoints[0][0] - rotationPoints[1][0], rotationPoints[0][1] - rotationPoints[1][1], rotationPoints[0][2] - rotationPoints[1][2]])
+        unitRotationalVector = rotationalVector / np.linalg.norm(rotationalVector)
+        a, b, c = unitRotationalVector[0], unitRotationalVector[1], unitRotationalVector[2]
+        d = np.sqrt(b**2 + c**2)
+        rotationalMatrixX = np.array([[1, 0, 0, 0],
+                                      [0, 1, 0, 0],
+                                      [0, 0, 1, 0],
+                                      [0, 0, 0, 1]])
+        invRotationalMatrixX = np.linalg.inv(rotationalMatrixX)
+        rotationalMatrixY = np.array([[d, 0, -a, 0],
+                                      [0, 1, 0, 0],
+                                      [a, 0, d, 0],
+                                      [0, 0, 0, 1]])
+        invRotationalMatrixY = np.linalg.inv(rotationalMatrixY)
+        rotationalMatrixZ = np.array([[np.cos(spreadRad/2), np.sin(spreadRad/2), 0, 0],
+                                      [-np.sin(spreadRad/2), np.cos(spreadRad/2), 0, 0],
+                                      [0, 0, 1, 0],
+                                      [0, 0, 0, 1]])
+        rotatedVector = invTransposeMatrix1@invRotationalMatrixX@invRotationalMatrixY@rotationalMatrixZ@rotationalMatrixY@rotationalMatrixX@transposeMatrix1@fourDimensionFocusVec
+        rotatedVector = [rotatedVector[0, 0], rotatedVector[1, 0], rotatedVector[2, 0]]
+        unitRotatedVector = rotatedVector / np.linalg.norm(rotatedVector)
+
+        return unitRotatedVector
 
 
 class Pallet:
@@ -191,7 +222,32 @@ def show_plots(seenPoints, obstructedPoints, cameras):
 
 
 def show_camera_FOV(camera):
-    pass
+    focusVec = camera.get_focus_vector()
+    spreadVecsXY = camera.get_spread_vectors_xy(focusVec, camera.FOV[0])
+    rotationAxis = camera.get_spread_vectors_xy(focusVec, 180)
+    rotationPoints = [[camera.x + rotationAxis[0][0]*10, camera.y + rotationAxis[0][1]*10, camera.z + rotationAxis[0][2]*10], [camera.x + rotationAxis[1][0]*10, camera.y + rotationAxis[1][1]*10, camera.z + rotationAxis[1][2]*10]]
+    spreadVecs = camera.get_spread_vectors_z(focusVec, rotationPoints, camera.FOV[1])
+    print(spreadVecs)
+
+    plt.figure()
+    ax = plt.axes(projection='3d')
+    plt.xlim(-10, 50)
+    plt.ylim(-10, 50)
+    ax.set_zlim(0, 50)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+    ax.scatter(camera.x, camera.y, camera.z, color="black")
+    ax.scatter(rotationPoints[0][0], rotationPoints[0][1], rotationPoints[0][2], color="blue")
+    ax.scatter(rotationPoints[1][0], rotationPoints[1][1], rotationPoints[1][2], color="blue")
+    ax.plot([camera.x, camera.x+focusVec[0]*80], [camera.y, camera.y+focusVec[1]*80], [camera.z, camera.z+focusVec[2]*80], color="green")
+    ax.plot([camera.x, camera.x + spreadVecsXY[0][0] * 50], [camera.y, camera.y + spreadVecsXY[0][1] * 50], [camera.z, camera.z + spreadVecsXY[0][2] * 50], color="red")
+    ax.plot([camera.x, camera.x + spreadVecsXY[1][0] * 50], [camera.y, camera.y + spreadVecsXY[1][1] * 50], [camera.z, camera.z + spreadVecsXY[1][2] * 50], color="red")
+    ax.plot([camera.x, camera.x + spreadVecs[0]*10], [camera.y, camera.y + spreadVecs[1]*10], [camera.z, camera.z + spreadVecs[2]*10], color="purple")
+    ax.plot([camera.x, camera.x + rotationAxis[0][0] * 50], [camera.y, camera.y + rotationAxis[0][1] * 50], [camera.z, camera.z + rotationAxis[0][2] * 50], color="red")
+    ax.plot([camera.x, camera.x + rotationAxis[1][0] * 50], [camera.y, camera.y + rotationAxis[1][1] * 50], [camera.z, camera.z + rotationAxis[1][2] * 50], color="red")
+    ax.view_init(30, 220)
+    plt.show()
 
 
 def get_plane(point, normal):
@@ -199,7 +255,7 @@ def get_plane(point, normal):
 
 
 def main():
-    debug = False
+    debug = True
     useMultiProcessing = False
     steps = 10000
     additionalPoints = 10
@@ -209,7 +265,7 @@ def main():
     palletSurfaceNum, initialPoints = read_file("euro.txt", additionalPoints)
 
     if debug:
-        camera = Camera(-45, -45, 0, (10, 10), (0, 0, 0), 9000)
+        camera = Camera(0, 0, 0, (90, 90), (45, 45, 0), 9000)
         show_camera_FOV(camera)
 
     else:
