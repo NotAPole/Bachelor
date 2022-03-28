@@ -119,21 +119,17 @@ class Camera:
         return unitVector
 
     @staticmethod
-    def get_spread_vectors_xy(focusVector, spread):
-        spreadRad = spread*np.pi/180
-        rotationalMatrix1 = [
+    def get_focus_axis(focusVector):
+        spreadRad = np.pi
+        rotationalMatrix = [
             [np.cos(spreadRad / 2), -np.sin(spreadRad / 2), 0],
             [np.sin(spreadRad / 2), np.cos(spreadRad / 2), 0],
             [0, 0, 0]
         ]
-        rotationalMatrix2 = [
-            [np.cos(-spreadRad / 2), -np.sin(-spreadRad / 2), 0],
-            [np.sin(-spreadRad / 2), np.cos(-spreadRad / 2), 0],
-            [0, 0, 0]
-        ]
-        vectors = [np.matmul(rotationalMatrix1, focusVector), np.matmul(rotationalMatrix2, focusVector)]
 
-        return vectors
+        vector = np.matmul(rotationalMatrix, focusVector)
+
+        return vector / np.linalg.norm(vector)
 
     @staticmethod
     def get_spread_vectors_z(focusVec, rotationPoints, spread):
@@ -223,11 +219,19 @@ def show_plots(seenPoints, obstructedPoints, cameras):
 
 def show_camera_FOV(camera):
     focusVec = camera.get_focus_vector()
-    spreadVecsXY = camera.get_spread_vectors_xy(focusVec, camera.FOV[0])
-    rotationAxis = camera.get_spread_vectors_xy(focusVec, 180)
-    rotationPoints = [[camera.x + rotationAxis[0][0]*10, camera.y + rotationAxis[0][1]*10, camera.z + rotationAxis[0][2]*10], [camera.x + rotationAxis[1][0]*10, camera.y + rotationAxis[1][1]*10, camera.z + rotationAxis[1][2]*10]]
-    spreadVecs = camera.get_spread_vectors_z(focusVec, rotationPoints, camera.FOV[1])
-    print(spreadVecs)
+    focusAxis = camera.get_focus_axis(focusVec)
+    focusPlane = get_focus_plane(focusVec, focusAxis)
+    print(focusVec)
+    print(focusAxis)
+    print(focusPlane)
+    #sphericalCoords = get_spherical_coordinates(focusVec)
+    #rotatedSphericalVectors = get_rotated_vectors(sphericalCoords, camera.FOV)
+    #rotatedCartesianVectors = get_cartesian_coordinates(rotatedSphericalVectors)
+    #spreadVecsXY = camera.get_spread_vectors_xy(focusVec, camera.FOV[0])
+
+    #rotationPoints = [[camera.x + rotationAxis[0][0]*10, camera.y + rotationAxis[0][1]*10, camera.z + rotationAxis[0][2]*10], [camera.x + rotationAxis[1][0]*10, camera.y + rotationAxis[1][1]*10, camera.z + rotationAxis[1][2]*10]]
+    #spreadVecs = camera.get_spread_vectors_z(focusVec, rotationPoints, camera.FOV[1])
+    #print(spreadVecs)
 
     plt.figure()
     ax = plt.axes(projection='3d')
@@ -238,14 +242,9 @@ def show_camera_FOV(camera):
     ax.set_ylabel("y")
     ax.set_zlabel("z")
     ax.scatter(camera.x, camera.y, camera.z, color="black")
-    ax.scatter(rotationPoints[0][0], rotationPoints[0][1], rotationPoints[0][2], color="blue")
-    ax.scatter(rotationPoints[1][0], rotationPoints[1][1], rotationPoints[1][2], color="blue")
-    ax.plot([camera.x, camera.x+focusVec[0]*80], [camera.y, camera.y+focusVec[1]*80], [camera.z, camera.z+focusVec[2]*80], color="green")
-    ax.plot([camera.x, camera.x + spreadVecsXY[0][0] * 50], [camera.y, camera.y + spreadVecsXY[0][1] * 50], [camera.z, camera.z + spreadVecsXY[0][2] * 50], color="red")
-    ax.plot([camera.x, camera.x + spreadVecsXY[1][0] * 50], [camera.y, camera.y + spreadVecsXY[1][1] * 50], [camera.z, camera.z + spreadVecsXY[1][2] * 50], color="red")
-    ax.plot([camera.x, camera.x + spreadVecs[0]*10], [camera.y, camera.y + spreadVecs[1]*10], [camera.z, camera.z + spreadVecs[2]*10], color="purple")
-    ax.plot([camera.x, camera.x + rotationAxis[0][0] * 50], [camera.y, camera.y + rotationAxis[0][1] * 50], [camera.z, camera.z + rotationAxis[0][2] * 50], color="red")
-    ax.plot([camera.x, camera.x + rotationAxis[1][0] * 50], [camera.y, camera.y + rotationAxis[1][1] * 50], [camera.z, camera.z + rotationAxis[1][2] * 50], color="red")
+    ax.plot([camera.x, camera.x + focusVec[0] * 80], [camera.y, camera.y + focusVec[1] * 80], [camera.z, camera.z + focusVec[2] * 80], color="green")
+    ax.plot([camera.focus[0], camera.focus[0] + focusAxis[0] * 80], [camera.focus[1], camera.focus[1] + focusAxis[1] * 80], [camera.focus[2], camera.focus[2] + focusAxis[2] * 80], color="green")
+    ax.plot([camera.focus[0], camera.focus[0] + focusPlane[0] * 80], [camera.focus[1], camera.focus[1] + focusPlane[1] * 80], [camera.focus[2], camera.focus[2] + focusPlane[2] * 80], color="red")
     ax.view_init(30, 220)
     plt.show()
 
@@ -253,6 +252,38 @@ def show_camera_FOV(camera):
 def get_plane(point, normal):
     return normal[0], point[0], normal[1], point[1], normal[2], point[2]
 
+def get_focus_plane(focusVector, focusAxis):
+    unitNormal = np.cross(focusVector, focusAxis)
+
+    return unitNormal
+
+def get_spherical_coordinates(cartesian):
+    r = np.sqrt(cartesian[0]**2 + cartesian[1]**2 + cartesian[2]**2)
+    theta = np.arctan(cartesian[1]/cartesian[0])
+    phi = np.arccos(cartesian[2]/r)
+
+    return [r, theta, phi]
+
+def get_cartesian_coordinates(sphere):
+    cartesianVectors = []
+    for i in sphere:
+        x = i[0] * np.cos(i[1]) * np.sin(i[2])
+        y = i[0] * np.sin(i[1]) * np.sin(i[2])
+        z = i[0] * np.cos(i[2])
+        cartesianVectors.append([x, y, z])
+
+    return cartesianVectors
+
+def get_rotated_vectors(sphere, FOV):
+    thetaRotation = FOV[0]*np.pi/180/2
+    phiRotation = FOV[1]*np.pi/180/2
+    r, theta, phi = sphere
+    topLeftVector = [r, theta+thetaRotation, phi-phiRotation]
+    bottomLeftVector = [r, theta+thetaRotation, phi+phiRotation]
+    bottomRightVector = [r, theta-thetaRotation, phi+phiRotation]
+    topRightVector = [r, theta - thetaRotation, phi - phiRotation]
+
+    return [topLeftVector, bottomLeftVector, bottomRightVector, topRightVector]
 
 def main():
     debug = True
@@ -265,7 +296,7 @@ def main():
     palletSurfaceNum, initialPoints = read_file("euro.txt", additionalPoints)
 
     if debug:
-        camera = Camera(0, 0, 0, (90, 90), (45, 45, 0), 9000)
+        camera = Camera(0, 0, 0, (50, 45), (10, 10, 10), 9000)
         show_camera_FOV(camera)
 
     else:
