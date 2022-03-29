@@ -80,37 +80,39 @@ class Camera:
         return False
 
     def check_points_in_FOV(self, points):
-        possiblePoints = []
-        pointsOutsideFOV = []
-        unitFocusVector = self.get_focus_vector()
+        focusVec = self.get_focus_vector()
+        focusAxis1 = self.get_focus_axis(focusVec)
+        focusAxis2 = get_focus_plane(focusVec, focusAxis1)
+        fovVectors = get_FOV_vectors(focusAxis1, focusAxis2, focusVec, self.FOV)
+        unitVectors = []
+        for i in range(len(fovVectors)-1):
+            normalVector = np.cross(fovVectors[i], fovVectors[i+1])
+            unitVector = normalVector / (normalVector**2).sum()**0.5
+            unitVectors.append(unitVector)
+        normalVector = np.cross(fovVectors[-1], fovVectors[0])
+        unitVector = normalVector / (normalVector ** 2).sum() ** 0.5
+        unitVectors.append(unitVector)
 
-        xyVectors = self.get_spread_vectors_xy(unitFocusVector, self.FOV[0])
-        #plt.figure()
-        #ax = plt.axes(projection='3d')
-        #plt.xlim(-10, 100)
-        #plt.ylim(0, 150)
-        #ax.set_zlim(0, 20)
-        #ax.plot((xyVectors[0][0]+self.x, xyVectors[0][0]*100+self.x), (xyVectors[0][1]+self.y, xyVectors[0][1]*100+self.y), (xyVectors[0][2]+self.z, xyVectors[0][2]*100+self.z))
-        #plt.show()
-        #zVectors = self.get_spread_vectors_z(unitFocusVector, self.FOV[1])
+        pointsOutsideFOV = []
         for i in points:
             dist = np.sqrt((i[0] - self.x) ** 2 + (i[1] - self.y)**2 + (i[2] - self.z) ** 2)
             if dist <= self.range:
-                xLimits = [np.min([xyVectors[0][0] * dist, xyVectors[1][0] * dist]), np.max([xyVectors[0][0] * dist, xyVectors[1][0] * dist])]
-                yLimits = [np.min([xyVectors[0][1] * dist, xyVectors[1][1] * dist]), np.max([xyVectors[0][1] * dist, xyVectors[1][1] * dist])]
-
-                if xLimits[0] <= i[0]+self.x <= xLimits[1] and yLimits[0] <= i[1]+self.y <= yLimits[1]:
-                    print("inside")
-                    possiblePoints.append(i)
-                else:
-                    print(unitFocusVector)
-                    print(xyVectors)
-                    print(yLimits, i[1])
-                    pointsOutsideFOV.append(i)
+                for j in unitVectors:
+                    planar_result = np.dot(np.array([i[0], i[1], i[2]]) - np.array([self.x, self.y, self.z]), j)
+                    if planar_result > 0:
+                        pointsOutsideFOV.append(i)
+                        break
+                    else:
+                        pass
             else:
                 pointsOutsideFOV.append(i)
 
-        return possiblePoints, pointsOutsideFOV
+        possiblePoints = []
+        for i in points:
+            if i not in pointsOutsideFOV:
+                possiblePoints.append(i)
+
+        return possiblePoints, pointsOutsideFOV, unitVectors
 
     def get_focus_vector(self):
         vector = np.array([self.focus[0]-self.x, self.focus[1]-self.y, self.focus[2]-self.z])
@@ -139,7 +141,7 @@ class Camera:
             return vector / (vector**2).sum()**0.5
 
     @staticmethod
-    def get_spread_vectors_z(focusVec, rotationPoints, spread):
+    def get_spread_vectors_z(focusVec, rotationPoints, spread): # NOT USED
         fourDimensionFocusVec = np.array([[focusVec[0]],
                                           [focusVec[1]],
                                           [focusVec[2]],
@@ -180,22 +182,10 @@ class Camera:
 class Pallet:
     def __init__(self, faces):
         self.faces = faces
-        self.equations = self.get_planar_equations(faces)
-
-    @staticmethod
-    def get_planar_equations(surfaces):
-        equations = []
-        for j in surfaces:
-            vector1 = [j[1][0] - j[0][0], j[1][1] - j[0][1], j[1][2] - j[0][2]]
-            vector2 = [j[2][0] - j[0][0], j[2][1] - j[0][1], j[2][2] - j[0][2]]
-            normal = np.cross(vector1, vector2)
-            normal_hat = normal / (normal ** 2).sum() ** 0.5
-            equations.append(get_plane(j[0], normal_hat))
-
-        return equations
+        self.equations = get_planar_equations(faces)
 
 
-def show_plots(seenPoints, obstructedPoints, cameras):
+def show_plots(seenPoints, obstructedPoints, cameras, unitVectors=None):
     X_seen, Y_seen, Z_seen = [], [], []
     for j in seenPoints:
         X_seen.append(j[0])
@@ -211,8 +201,8 @@ def show_plots(seenPoints, obstructedPoints, cameras):
     plt.figure()
     ax = plt.axes(projection='3d')
     plt.xlim(-100, 100)
-    plt.ylim(-100, 200)
-    ax.set_zlim(-100, 50)
+    plt.ylim(-100, 100)
+    ax.set_zlim(-100, 100)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
@@ -220,46 +210,43 @@ def show_plots(seenPoints, obstructedPoints, cameras):
     ax.scatter(X_obs, Y_obs, Z_obs, color="red", marker=".")
     for i in cameras:
         ax.scatter(i.x, i.y, i.z, color="black")
+        fovVectors = get_camera_FOV(i)
+        ax.plot([i.x, i.x + fovVectors[0][0] * 75], [i.y, i.y + fovVectors[0][1] * 75],
+                [i.z, i.z + fovVectors[0][2] * 75], color="blue")
+        ax.plot([i.x, i.x + fovVectors[1][0] * 75], [i.y, i.y + fovVectors[1][1] * 75],
+                [i.z, i.z + fovVectors[1][2] * 75], color="blue")
+        ax.plot([i.x, i.x + fovVectors[2][0] * 75], [i.y, i.y + fovVectors[2][1] * 75],
+                [i.z, i.z + fovVectors[2][2] * 75], color="blue")
+        ax.plot([i.x, i.x + fovVectors[3][0] * 75], [i.y, i.y + fovVectors[3][1] * 75],
+                [i.z, i.z + fovVectors[3][2] * 75], color="blue")
+        if unitVectors is not None:
+            for j in unitVectors:
+                ax.plot([i.x, i.x + j[0] * 10], [i.y, i.y + j[1] * 10],
+                        [i.z, i.z + j[2] * 10], color="orange")
+
     ax.view_init(30, 220)
     plt.show()
 
 
-def show_camera_FOV(camera):
+def get_planar_equations(surfaces):
+    equations = []
+    for j in surfaces:
+        vector1 = [j[1][0] - j[0][0], j[1][1] - j[0][1], j[1][2] - j[0][2]]
+        vector2 = [j[2][0] - j[0][0], j[2][1] - j[0][1], j[2][2] - j[0][2]]
+        normal = np.cross(vector1, vector2)
+        normal_hat = normal / (normal ** 2).sum() ** 0.5
+        equations.append(get_plane(j[0], normal_hat))
+
+    return equations
+
+
+def get_camera_FOV(camera):
     focusVec = camera.get_focus_vector()
     focusAxis1 = camera.get_focus_axis(focusVec)
     focusAxis2 = get_focus_plane(focusVec, focusAxis1)
-    fovVectors = get_FOV_vectors(focusAxis1, focusAxis2, camera.FOV)
-    #sphericalCoords = get_spherical_coordinates(focusVec)
-    #rotatedSphericalVectors = get_rotated_vectors(sphericalCoords, camera.FOV)
-    #rotatedCartesianVectors = get_cartesian_coordinates(rotatedSphericalVectors)
-    #spreadVecsXY = camera.get_spread_vectors_xy(focusVec, camera.FOV[0])
+    fovVectors = get_FOV_vectors(focusAxis1, focusAxis2, focusVec, camera.FOV)
 
-    #rotationPoints = [[camera.x + rotationAxis[0][0]*10, camera.y + rotationAxis[0][1]*10, camera.z + rotationAxis[0][2]*10], [camera.x + rotationAxis[1][0]*10, camera.y + rotationAxis[1][1]*10, camera.z + rotationAxis[1][2]*10]]
-    #spreadVecs = camera.get_spread_vectors_z(focusVec, rotationPoints, camera.FOV[1])
-    #print(spreadVecs)
-
-    plt.figure()
-    ax = plt.axes(projection='3d')
-    plt.xlim(-10, 10)
-    plt.ylim(-10, 10)
-    ax.set_zlim(-10, 10)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-    ax.scatter(camera.x, camera.y, camera.z, color="black")
-    ax.plot([camera.x, camera.x + focusVec[0]], [camera.y, camera.y + focusVec[1]], [camera.z, camera.z + focusVec[2]], color="green")
-    ax.plot([focusVec[0], focusVec[0] + focusAxis1[0]], [focusVec[1], focusVec[1] + focusAxis1[1]], [focusVec[2], focusVec[2] + focusAxis1[2]], color="green")
-    ax.plot([focusVec[0], focusVec[0] + focusAxis2[0]], [focusVec[1], focusVec[1] + focusAxis2[1]], [focusVec[2], focusVec[2] + focusAxis2[2]], color="red")
-    ax.plot([camera.x, focusVec[0] + fovVectors[0][0]], [camera.y, focusVec[1] + fovVectors[0][1]],
-            [camera.z, focusVec[2] + fovVectors[0][2]], color="blue")
-    ax.plot([camera.x, focusVec[0] + fovVectors[1][0]], [camera.y, focusVec[1] + fovVectors[1][1]],
-            [camera.z, focusVec[2] + fovVectors[1][2]], color="blue")
-    ax.plot([camera.x, focusVec[0] + fovVectors[2][0]], [camera.y, focusVec[1] + fovVectors[2][1]],
-            [camera.z, focusVec[2] + fovVectors[2][2]], color="blue")
-    ax.plot([camera.x, focusVec[0] + fovVectors[3][0]], [camera.y, focusVec[1] + fovVectors[3][1]],
-            [camera.z, focusVec[2] + fovVectors[3][2]], color="blue")
-    ax.view_init(30, 220)
-    plt.show()
+    return fovVectors
 
 
 def get_plane(point, normal):
@@ -272,7 +259,7 @@ def get_focus_plane(focusVector, focusAxis):
     return unitNormal
 
 
-def get_FOV_vectors(vector1, vector2, FOV):
+def get_FOV_vectors(vector1, vector2, focusVector, FOV):
     leftTurnRad = FOV[0] * np.pi / 180 / 2
     topTurnRad = FOV[1] * np.pi / 180 / 2
 
@@ -281,15 +268,25 @@ def get_FOV_vectors(vector1, vector2, FOV):
     upwards = np.sin(topTurnRad) + (1-np.cos(topTurnRad))/np.cos(topTurnRad)
     downwards = -upwards
 
-    vectorTopLeft = leftwards * vector1 + upwards * vector2
-    vectorBottomLeft = leftwards * vector1 + downwards * vector2
-    vectorBottomRight = rightwards * vector1 + downwards * vector2
-    vectorTopRight = rightwards * vector1 + upwards * vector2
+    vectorTopLeft = leftwards * vector1 + upwards * vector2 + focusVector
+    vectorBottomLeft = leftwards * vector1 + downwards * vector2 + focusVector
+    vectorBottomRight = rightwards * vector1 + downwards * vector2 + focusVector
+    vectorTopRight = rightwards * vector1 + upwards * vector2 + focusVector
 
     return [vectorTopLeft, vectorBottomLeft, vectorBottomRight, vectorTopRight]
 
 
-def get_spherical_coordinates(cartesian):
+def get_FOV_surfaces(point, vectors):
+    surfaces = []
+    for i in range(len(vectors)-1):
+        surfaces.append([point, point + vectors[i], point + vectors[i+1]])
+    surfaces.append([point, point + vectors[-1], point + vectors[0]])
+    #print(surfaces)
+
+    return surfaces
+
+
+def get_spherical_coordinates(cartesian): # NOT USED
     r = np.sqrt(cartesian[0]**2 + cartesian[1]**2 + cartesian[2]**2)
     theta = np.arctan(cartesian[1]/cartesian[0])
     phi = np.arccos(cartesian[2]/r)
@@ -297,7 +294,7 @@ def get_spherical_coordinates(cartesian):
     return [r, theta, phi]
 
 
-def get_cartesian_coordinates(sphere):
+def get_cartesian_coordinates(sphere): # NOT USED
     cartesianVectors = []
     for i in sphere:
         x = i[0] * np.cos(i[1]) * np.sin(i[2])
@@ -308,7 +305,7 @@ def get_cartesian_coordinates(sphere):
     return cartesianVectors
 
 
-def get_rotated_vectors(sphere, FOV):
+def get_rotated_vectors(sphere, FOV): # NOT USED
     thetaRotation = FOV[0]*np.pi/180/2
     phiRotation = FOV[1]*np.pi/180/2
     r, theta, phi = sphere
@@ -323,31 +320,41 @@ def get_rotated_vectors(sphere, FOV):
 def main():
     debug = True
     useMultiProcessing = False
-    steps = 10000
+    steps = 1
     additionalPoints = 10
     thresholdSurface = 1/steps*20
     thresholdPoint = 0.02
     startTime = time.time()
     palletSurfaceNum, initialPoints = read_file("euro.txt", additionalPoints)
-
     if debug:
-        camera = Camera(0, 0, 0, (70, 55), (10, 10, 0), 9000)
-        show_camera_FOV(camera)
+        cameras = []
+        cameras.append(Camera(-5, -5, 0, (39, 25), (5, 5, 0), 100))
+        p1 = Pallet(palletSurfaceNum)
+
+        pointsInFov, notPossiblePoints, unitVectors = cameras[0].check_points_in_FOV(initialPoints)
+        seenPointsCamera = check_FOV(cameras[0], 1, p1, pointsInFov, steps, thresholdPoint, thresholdSurface)
+
+        obstructedPoints = []
+        for i in initialPoints:
+            if i not in seenPointsCamera:
+                obstructedPoints.append(i)
+        show_plots(pointsInFov, notPossiblePoints, cameras, unitVectors)
+
 
     else:
         cameras = []
-        cameras.append(Camera(-74.7, -125.3, -86, (10, 10), (0, 0, 0), 9000))
-        cameras.append(Camera(116.4, 257.2, -86, (10, 10), (0, 0, 0), 9000))
-        cameras.append(Camera(60, 260, 94.4, (10, 10), (0, 0, 0), 9000))
-        #cameras.append(Camera(40, 60, -100, (10, 10), (0, 0, 0), 9000))
+        cameras.append(Camera(-74.7, -125.3, -86, (39, 25), (0, 0, 10), 260))
+        cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), 260))
+        cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), 260))
+        #cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), 1000))
         p1 = Pallet(palletSurfaceNum)
         if useMultiProcessing:
             manager = multiprocessing.Manager()
             seenPoints = manager.list()
             processPool = []
             for i, c in enumerate(cameras):
-                #remainingPoints, obstructedPoints = c.check_points_in_FOV(initialPoints)
-                processPool.append(multiprocessing.Process(target=check_FOV, args=(c, i+1, p1, initialPoints, steps, thresholdPoint, thresholdSurface, seenPoints)))
+                remainingPoints, obstructedPoints = c.check_points_in_FOV(initialPoints)
+                processPool.append(multiprocessing.Process(target=check_FOV, args=(c, i+1, p1, remainingPoints, steps, thresholdPoint, thresholdSurface, seenPoints)))
                 processPool[i].start()
             for process in processPool:
                 process.join()
@@ -359,7 +366,8 @@ def main():
             seenPoints = []
             remainingPoints = initialPoints
             for i, c in enumerate(cameras):
-                seenPointsCamera = check_FOV(c, i+1, p1, remainingPoints, steps, thresholdPoint, thresholdSurface)
+                pointsInFov, _, _ = c.check_points_in_FOV(remainingPoints)
+                seenPointsCamera = check_FOV(c, i+1, p1, pointsInFov, steps, thresholdPoint, thresholdSurface)
                 remainingPoints = []
                 for j in seenPointsCamera:
                     seenPoints.append(j)

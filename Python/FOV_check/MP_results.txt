@@ -1,2 +1,2 @@
-Time used without MP: 5002.18 seconds
-Time used with MP: 4684.74 seconds
+Time used without MP: 5002.18 seconds (10000 steps, 3 camera, 10 additional points)
+Time used with MP: 4684.74 seconds (10000 steps, 3 camera, 10 additional points)
