@@ -328,7 +328,7 @@ def main():
     palletSurfaceNum, initialPoints = read_file("euro.txt", additionalPoints)
     if debug:
         cameras = []
-        cameras.append(Camera(-5, -5, 0, (39, 25), (5, 5, 0), 100))
+        cameras.append(Camera(-10, -10, 0, (50, 36), (0, 0, 0), 150))
         p1 = Pallet(palletSurfaceNum)
 
         pointsInFov, notPossiblePoints, unitVectors = cameras[0].check_points_in_FOV(initialPoints)
@@ -343,9 +343,9 @@ def main():
 
     else:
         cameras = []
-        cameras.append(Camera(-74.7, -125.3, -86, (39, 25), (0, 0, 10), 260))
-        cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), 260))
-        cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), 260))
+        cameras.append(Camera(-74.7, -125.3, -86, (50, 25), (0, 0, 10), 260))
+        #cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), 260))
+        #cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), 260))
         #cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), 1000))
         p1 = Pallet(palletSurfaceNum)
         if useMultiProcessing:
