@@ -22,7 +22,8 @@ class Camera:
         self.z = z
         self.fov = fov
         self.focus = focus
-        self.range = range
+        self.min_range = range[0]
+        self.max_range = range[1]
 
     def check_fov(self, point, possible_obstructions, planar_equations, step, tC, tP):
         x, y, z = self.calculate_coordinates(point, step)
@@ -79,7 +80,7 @@ class Camera:
         points_outside_fov = []
         for i in points:
             dist = np.sqrt((i[0] - self.x) ** 2 + (i[1] - self.y)**2 + (i[2] - self.z) ** 2)
-            if dist <= self.range:
+            if self.min_range <= dist <= self.max_range:
                 for j in unit_vectors:
                     planar_result = np.dot(np.array([i[0], i[1], i[2]]) - np.array([self.x, self.y, self.z]), j)
                     if planar_result > 0:
@@ -402,14 +403,14 @@ def main():
     fov_check = True
     use_multi_processing = False
     steps = 1
-    additional_points = 10
+    additional_points = 20
     threshold_surface = 1/steps*20
     threshold_point = 0.02
     start_time = time.time()
     pallet_surface_num, initial_points = read_file("euro.txt", additional_points)
     if debug:
         cameras = []
-        cameras.append(Camera(-10, -10, 0, (50, 36), (0, 0, 0), 150))
+        cameras.append(Camera(-10, -10, 0, (50, 36), (0, 0, 0), (0-150)))
         p1 = Pallet(pallet_surface_num)
 
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
@@ -423,17 +424,17 @@ def main():
 
     elif fov_check:
         cameras = []
-        cameras.append(Camera(-70, -60, 7, (35, 29), (0, 5, 7), 260))
+        cameras.append(Camera(-70, -60, 7, (35, 29), (0, 5, 7), (170, 200)))
 
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors)
 
     else:
         cameras = []
-        cameras.append(Camera(-74.7, -125.3, -86, (50, 25), (0, 0, 10), 260))
-        #cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), 260))
-        #cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), 260))
-        #cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), 1000))
+        cameras.append(Camera(-74.7, -125.3, -86, (50, 25), (0, 0, 10), (80, 260)))
+        #cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), (80, 260)))
+        #cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), (80, 260)))
+        #cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), (80, 260)))
         p1 = Pallet(pallet_surface_num)
         if use_multi_processing:
             manager = multiprocessing.Manager()
