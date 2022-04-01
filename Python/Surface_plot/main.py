@@ -17,13 +17,18 @@ def main():
     AD_hat = AD / (AD ** 2).sum() ** 0.5
     N_hat = N / (N ** 2).sum() ** 0.5
 
-
     plt.figure()
     ax = plt.axes(projection='3d')
-    ax.quiver(0, 0, 0, N_hat[0], N_hat[1], N_hat[2], color='r', linewidths=2)
+    plt.xlim(-1, 1)
+    plt.ylim(-1, 1)
+    ax.set_zlim(-1, 1)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+    #ax.quiver(0, 0, 0, N_hat[0], N_hat[1], N_hat[2], color='r', linewidths=2)
     ax.quiver(0, 0, 0, AB_hat[0], AB_hat[1], AB_hat[2], color='b', linewidths=2)
     ax.quiver(0, 0, 0, AD_hat[0], AD_hat[1], AD_hat[2], color='b', linewidths=2)
-    ax.plot_surface(x, y, z, color="purple")
+    #ax.plot_surface(x, y, z, color="purple")
     plt.show()
 
 
