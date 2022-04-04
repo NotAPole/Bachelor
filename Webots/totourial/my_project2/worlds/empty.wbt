@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.23795463225594496 0.14901135008974734 -0.9597776880780094 2.2423226345211775
-  position 0.9374609301650663 1.3902455305365602 0.930102001877117
+  orientation 0.08663713446609038 0.02677386127427321 -0.9958800968409653 3.0547530283003277
+  position 1.1417046913672113 0.3269747059862621 0.3219659461675906
 }
 TexturedBackground {
 }
@@ -103,9 +103,34 @@ Robot {
       ]
       name "solid(3)"
     }
+    Solid {
+      translation 0 0 0.082
+      children [
+        USE eye
+      ]
+      name "solid(4)"
+    }
+    Lidar {
+      translation 0 0 0.08
+      rotation 0 0 1 -1.57
+      tiltAngle 1
+      horizontalResolution 56
+      fieldOfView 1
+      verticalFieldOfView 0.3389830508474576
+      numberOfLayers 20
+      maxRange 0.5
+    }
   ]
   boundingObject USE Body
   physics Physics {
   }
-  controller "drive_my_robot"
+  controller "lidar_controller"
+}
+WoodenPallet {
+  translation 0 0.4 0.36
+  size 0.3 0.15 0.07
+}
+WoodenBox {
+  translation -0.32 0.41 0.07
+  size 0.2 0.2 0.2
 }
