@@ -16,18 +16,20 @@ def main():
     AB_hat = AB / (AB ** 2).sum() ** 0.5
     AD_hat = AD / (AD ** 2).sum() ** 0.5
     N_hat = N / (N ** 2).sum() ** 0.5
-
     plt.figure()
     ax = plt.axes(projection='3d')
-    plt.xlim(-1, 1)
-    plt.ylim(-1, 1)
-    ax.set_zlim(-1, 1)
+    plt.xlim(-1.01, 1.01)
+    plt.ylim(-1.01, 1.01)
+    ax.set_zlim(-1.01, 1.01)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
+    focus = np.array([0, np.sqrt(0.5), np.sqrt(0.5)])
+    vector_2 = np.cross(focus, np.array([-1, 0, 0]))
     #ax.quiver(0, 0, 0, N_hat[0], N_hat[1], N_hat[2], color='r', linewidths=2)
-    ax.quiver(0, 0, 0, AB_hat[0], AB_hat[1], AB_hat[2], color='b', linewidths=2)
-    ax.quiver(0, 0, 0, AD_hat[0], AD_hat[1], AD_hat[2], color='b', linewidths=2)
+    ax.quiver(0, 0, 0, focus[0], focus[1], focus[2], color='r', linewidths=2)
+    ax.quiver(focus[0], focus[1], focus[2], focus[0]-1, 0, 0, color='b', linewidths=2)
+    ax.quiver(focus[0], focus[1], focus[2], vector_2[0], vector_2[1], vector_2[2], color='b', linewidths=2)
     #ax.plot_surface(x, y, z, color="purple")
     plt.show()
 

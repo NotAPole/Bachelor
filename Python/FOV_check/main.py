@@ -169,7 +169,7 @@ class Pallet:
         self.equations = get_planar_equations(faces)
 
 
-def show_plots(seen_points, obstructed_points, cameras, unit_vectors=None):
+def show_plots(seen_points, obstructed_points, cameras, unit_vectors=None, color=None):
     X_seen, Y_seen, Z_seen = [], [], []
     for j in seen_points:
         X_seen.append(j[0])
@@ -190,7 +190,10 @@ def show_plots(seen_points, obstructed_points, cameras, unit_vectors=None):
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-    ax.scatter(X_seen, Y_seen, Z_seen, color="green", marker=".")
+    if color is None:
+        ax.scatter(X_seen, Y_seen, Z_seen, color="green", marker=".")
+    else:
+        ax.scatter(X_seen, Y_seen, Z_seen, color=color, marker=".")
     ax.scatter(X_obs, Y_obs, Z_obs, color="red", marker=".")
     for i in cameras:
         ax.scatter(i.x, i.y, i.z, color="black")
@@ -424,10 +427,9 @@ def main():
 
     elif fov_check:
         cameras = []
-        cameras.append(Camera(-0, -0, 0, (35, 29), (0, 5, 100), (170, 200)))
-
+        cameras.append(Camera(-0, -0, 0, (1, 1), (0, 5, 100), (170, 200)))
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
-        show_plots(points_in_fov, not_possible_points, cameras, unit_vectors)
+        show_plots(points_in_fov, not_possible_points, cameras, unit_vectors, color="blue")
 
     else:
         cameras = []
