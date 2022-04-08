@@ -1,0 +1,47 @@
+#VRML_SIM R2022a utf8
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.11760736153424918 -0.1768369668225864 0.9771884136019726 5.0880545528235075
+  position -2.637499985202197 10.179091178826702 3.7620400648063574
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 10 10
+}
+Robot {
+  translation 0.96157 0.96157 0.702842
+  rotation 0.13033599560303447 0.05398679817872192 -0.9899989666017716 2.36328
+  children [
+    RangeFinder {
+      name "3d"
+      width 1000
+      height 1000
+      minRange 0.1
+      maxRange 3
+    }
+    Camera {
+    }
+  ]
+  name "framework2"
+  controller "camera"
+}
+WoodenBox {
+}
+Robot {
+  translation -1 0 0.5
+  rotation 0 1 0 0.25
+  children [
+    Camera {
+    }
+    RangeFinder {
+      rotation 0 1 0 0
+      name "3d"
+    }
+  ]
+  name "framework1"
+  controller "camera"
+}
