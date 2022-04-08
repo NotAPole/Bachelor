@@ -410,7 +410,7 @@ def main():
     pallet_surface_num, initial_points = read_file("euro.txt", additional_points)
     if debug:
         cameras = []
-        cameras.append(Camera(-10, -10, 0, (50, 36), (0, 0, 0), (0-150)))
+        cameras.append(Camera(-10, -10, 0, (1, 1), (0, 0, 100), (0-150)))
         p1 = Pallet(pallet_surface_num)
 
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
@@ -424,7 +424,7 @@ def main():
 
     elif fov_check:
         cameras = []
-        cameras.append(Camera(-70, -60, 7, (35, 29), (0, 5, 7), (170, 200)))
+        cameras.append(Camera(-0, -0, 0, (35, 29), (0, 5, 100), (170, 200)))
 
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors)
