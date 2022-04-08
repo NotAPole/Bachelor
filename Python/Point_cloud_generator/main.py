@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-import sys
 import numpy as np
+import open3d as o3d
 
 
 def read_file(file_name):
@@ -93,17 +93,29 @@ def get_point_vectors(vector_1, vector_2, focus_vector, fov, resolution):
     return side_vectors_values, top_vectors_values
 
 
+def mapping(value, in_min, in_max, out_min, out_max):
+    in_span = in_max - in_min
+    out_span = out_max - out_min
+
+    scale = float(value - in_min) / float(in_span)
+
+    return out_min + (scale * out_span)
+
+
 def get_points(distances, side_vectors, top_vectors, focus_vector):
     point_matrix = []
+    grey_scale_value = []
     for i, row in enumerate(distances):
         point_matrix.append([])
+        grey_scale_value.append([])
         for j, distance in enumerate(row):
             point_matrix[i].append((side_vectors[j] + top_vectors[i] + focus_vector) * (distance*4))
+            grey_scale_value[i].append(mapping(distance, 0, 1, 0, 1))
 
-    return point_matrix
+    return point_matrix, grey_scale_value
 
 
-def show_point_cloud(cameras, fov_vectors, points, scale_down):
+def show_point_cloud(cameras, fov_vectors, points, grey_scale, scale_down):
     plt.figure()
     ax = plt.axes(projection='3d')
     plt.xlim(-2, 4)
@@ -125,30 +137,46 @@ def show_point_cloud(cameras, fov_vectors, points, scale_down):
                 [placement[2], placement[2] + fov_vectors[i][3][2]], color="blue")
 
     for i, row in enumerate(points):
-        if i % scale_down == 1:
+        if i % scale_down == 1 or scale_down == 1 or scale_down == 0:
             for j, point in enumerate(row):
-                if j % scale_down == 1:
-                    print(f"{round(((i*len(row)+j)/(len(points)*len(row)))*100, 2)}% done")
-                    ax.scatter(placement[0] + point[0], placement[1] + point[1], placement[2] + point[2], color="black", marker=".")
+                if j % scale_down == 1 or scale_down == 1 or scale_down == 0:
+                    print(f"{round(((i*len(row)+j)/(len(points)*len(row)))*100, 3)}% done")
+                    ax.scatter(placement[0] + point[0], placement[1] + point[1], placement[2] + point[2], c="b", marker=".")
 
+    plt.gray()
     ax.view_init(30, 220)
     plt.show()
 
 
 def main():
     distances = read_file("cam2_dist.txt")
-    scale_down = 3
+    scale_down = 0
     fov = (39, 25)
     cameras = []
     fov_vectors = []
     cameras.append([0, 0, 0])
-    focus_vector = get_focus_vector((0, 0, 0), (1, 1, 0))
+    focus_vector = get_focus_vector((0, 0, 0.4), (1, 0.4, 0))
     focus_axis_1 = get_focus_axis_1(focus_vector)
     focus_axis_2 = get_focus_axis_2(focus_vector, focus_axis_1)
     fov_vectors.append(get_fov_vectors(focus_axis_1, focus_axis_2, focus_vector, fov))
     side_vectors, top_vectors = get_point_vectors(focus_axis_1, focus_axis_2, focus_vector, fov, np.shape(distances))
-    points = get_points(distances, side_vectors, top_vectors, focus_vector)
-    show_point_cloud(cameras, fov_vectors, points, scale_down)
+    points, grey_scale = get_points(distances, side_vectors, top_vectors, focus_vector)
+
+    #show_point_cloud(cameras, fov_vectors, points, grey_scale, scale_down)
+    ply_point = o3d.data.PLYPointCloud()
+    print("Load a ply point cloud, print it, and render it")
+    ply_point_cloud = o3d.data.PLYPointCloud()
+    pcd = o3d.io.read_point_cloud("1.ply")#ply_point_cloud.path)
+    print(len(pcd.points))
+    for i, row in enumerate(points[::4]):
+        for j, point in enumerate(row):
+            pcd.points[i*len(points[0]) + j] = point
+    print(np.asarray(pcd.points))
+    o3d.visualization.draw_geometries([pcd],
+                                      zoom=0.3412,
+                                      front=[4, -0.2125, -0.8795],
+                                      lookat=[2.6172, 2.0475, 1.532],
+                                      up=[-0.0694, -0.9768, 0.2024])
 
 if __name__ == '__main__':
     main()
