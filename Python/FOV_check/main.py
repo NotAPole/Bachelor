@@ -186,7 +186,7 @@ def show_plots(seen_points, obstructed_points, cameras, unit_vectors=None, color
     ax = plt.axes(projection='3d')
     plt.xlim(-40, 100)
     plt.ylim(-40, 100)
-    ax.set_zlim(950, 1050)
+    ax.set_zlim(-50, 50)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
@@ -426,8 +426,11 @@ def main():
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors)
 
     elif fov_check:
+        #initial_points.append([10, 10, 1000])
+        #initial_points.append([20, 20, 1000])
+        #initial_points.append([30, 30, 1000])
         cameras = []
-        cameras.append(Camera(-10, -10, 1000, (39, 25), (0, 0, 1000), (170, 200)))
+        cameras.append(Camera(-10, -10, 0, (39, 25), (0, 0, 10), (0, 50)))
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors, color="blue")
 
