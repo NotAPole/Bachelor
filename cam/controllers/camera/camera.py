@@ -24,6 +24,9 @@ class platform (Robot):
         elif self.ID == 'framework2':
             print('robot2 identified')
             self.filename = ['cam2_dist.txt','cam2_rgb.txt']
+        elif self.ID == 'framework3':
+            print('robot3 identified')
+            self.filename = ['cam3_dist.txt','cam3_rgb.txt']
         
     def run(self):
         while True:
