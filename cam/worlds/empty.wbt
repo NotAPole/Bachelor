@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.32291402473230413 0.9027210147765009 0.2842908758860704 0.5046322058995165
-  position -14.08789678538931 0.16203317109661453 8.039515038291965
+  orientation 0.3360206002449081 -0.46524287507787887 -0.818925651936927 5.454057530150017
+  position -18.921586117028067 -11.50939532167634 11.712100147998108
 }
 TexturedBackground {
 }
@@ -109,4 +109,44 @@ Solid {
     }
   ]
   name "Sort dummy"
+}
+Robot {
+  translation 0 4.63 0.4
+  rotation 0 1 0 0
+  children [
+    SliderJoint {
+      jointParameters JointParameters {
+      }
+      device [
+        LinearMotor {
+          name "linear"
+          maxPosition 2
+        }
+      ]
+      endPoint Solid {
+        translation 0.07 -0.15 0
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 1 0 0
+              roughness 1
+              metalness 0
+            }
+            geometry Box {
+              size 0.1 0.1 0.1
+            }
+          }
+        ]
+      }
+    }
+    Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 0.2 0.2 3
+      }
+    }
+  ]
+  name "metal_pole"
+  controller "linear_axis_python_controller"
 }
