@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.207076786913467 0.25185047758248846 -0.9453520726496912 1.9171643066699466
-  position 2.1328995654679117 9.500097900543963 4.701063901612896
+  orientation -0.32291402473230413 0.9027210147765009 0.2842908758860704 0.5046322058995165
+  position -14.08789678538931 0.16203317109661453 8.039515038291965
 }
 TexturedBackground {
 }
@@ -11,8 +11,8 @@ TexturedBackgroundLight {
   castShadows FALSE
 }
 RectangleArena {
-  translation 1.48 0 -1.09
-  floorSize 10 10
+  translation 0 0 -1.1
+  floorSize 10 15
 }
 Robot {
   translation -0.455063 2.08189 0.677014
@@ -55,8 +55,6 @@ Robot {
 WoodenPallet {
   translation 0.95 1.44 1.43
   rotation 0 0 1 3.14159
-}
-WoodenBox {
 }
 Robot {
   translation -0.283123 1.44714 2.81119
@@ -110,5 +108,5 @@ Solid {
       name ""
     }
   ]
-  name "<STL_BINARY>"
+  name "Sort dummy"
 }
