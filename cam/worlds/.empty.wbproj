@@ -13,3 +13,5 @@ renderingDevicePerspectives: framework2:3d;1;0.425;0.716843;0.291304
 renderingDevicePerspectives: framework2:camera;1;0.385;0;0.347826
 renderingDevicePerspectives: framework3:3d;1;0.41;0.72679;0.577869
 renderingDevicePerspectives: framework3:camera;1;0.367;0;0.621926
+renderingDevicePerspectives: metal_pole:3d;1;4.76563;0.153552;0.0696721
+renderingDevicePerspectives: metal_pole:camera;1;4.70313;0.148714;0.542008
