@@ -3,7 +3,7 @@ from controller import Robot, Motor, Camera, RangeFinder
 from math import pi, sin
 
 class platform (Robot):
-    timestep = 32
+    timestep = 64
 
     def __init__(self):
         super(platform, self).__init__()
@@ -59,7 +59,7 @@ class platform (Robot):
     def camera_movement(self):
         F = 2.0   # frequency 2 Hz
         t = 0.0   # elapsed simulation time
-        speed=2
+        speed=1
         k=0 
         while self.step(self.timestep) != -1:
              # Verical controle
@@ -71,10 +71,10 @@ class platform (Robot):
              k= self.pSensor.getValue()
              print(k) 
          
-             if (k>1.57):
+             if (k>0.3):
                  if (speed==1):
                     speed=-1
-             if (k<0):
+             if (k<-0.3):
                  if (speed==-1):
                     speed=1
              pass   
