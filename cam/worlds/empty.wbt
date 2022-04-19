@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.3925922421767864 -0.611966377000294 -0.6865628047045206 5.860138699261508
-  position -14.032504927347324 -0.2095912822104143 5.308288349862661
+  orientation 0.3822694066082007 -0.5196871132342081 -0.7640650529305144 5.848059729098198
+  position -22.388627232028128 -4.928596634948068 7.145743072505711
 }
 TexturedBackground {
 }
@@ -111,7 +111,7 @@ Solid {
   name "Sort dummy"
 }
 Robot {
-  translation 1.14 3.12 0.4
+  translation 1.14 3.12 0.6
   rotation 0 1 0 0
   children [
     SliderJoint {
@@ -120,7 +120,8 @@ Robot {
       device [
         LinearMotor {
           name "linear"
-          maxPosition 2
+          maxPosition 1.2
+          multiplier 4
         }
       ]
       endPoint Solid {
@@ -150,7 +151,7 @@ Robot {
       appearance PBRAppearance {
       }
       geometry Box {
-        size 0.2 0.2 3
+        size 0.2 0.2 4
       }
     }
   ]
