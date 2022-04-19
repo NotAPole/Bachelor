@@ -475,7 +475,10 @@ def main():
 
         print("Total time used:", time.time() - start_time)
 
-        show_plots(seen_points, obstructed_points, cameras)
+        try:
+            show_plots(seen_points, obstructed_points, cameras)
+        except KeyboardInterrupt:
+            pass
 
 
 if __name__ == "__main__":
