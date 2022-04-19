@@ -125,23 +125,41 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.07 -0.15 0.87
+        translation 0.07 -0.15 0.6
         rotation 0 0 1 -1.5707953071795862
         children [
-          RangeFinder {
-            name "3d"
-            maxRange 19
-          }
-          Camera {
-          }
-          Shape {
-            appearance PBRAppearance {
-              baseColor 1 0 0
-              roughness 1
-              metalness 0
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 1 0
             }
-            geometry Box {
-              size 0.1 0.1 0.1
+            device [
+              PositionSensor {
+                name "ps"
+              }
+              RotationalMotor {
+                name "motor"
+              }
+            ]
+            endPoint Solid {
+              rotation 1 0 0 0
+              children [
+                Camera {
+                }
+                RangeFinder {
+                  name "3d"
+                  maxRange 4
+                }
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0 0.1 1
+                    roughness 1
+                    metalness 0
+                  }
+                  geometry Box {
+                    size 0.1 0.1 0.1
+                  }
+                }
+              ]
             }
           }
         ]

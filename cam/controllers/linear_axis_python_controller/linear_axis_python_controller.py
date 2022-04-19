@@ -2,30 +2,21 @@
 from controller import Robot, Motor, Camera, RangeFinder
 from math import pi, sin
 
-#from controller import Robot, Camera, RangeFinder
-
-#TIME_STEP = 32
-
-#robot = Robot()
-#motor = robot.getDevice("linear")
-
-
-
-#while robot.step(TIME_STEP) != -1:
-#    position = sin(t * 2.0 * pi * F)
-#    motor.setPosition(position)
-#    t += TIME_STEP / 1000.0
-    
-   
-
-#lagger en klasse som brukes for alle robotene, navnet på child komponentene må vere likt    
 class platform (Robot):
     timestep = 32
-    #F = 2.0   # frequency 2 Hz
-    #t = 0.0   # elapsed simulation time
-    #position = sin(t * 2.0 * pi * F)
+
     def __init__(self):
         super(platform, self).__init__()
+        
+        #m=self.getDevice("motor")
+        self.motorAngle = self.getDevice("motor")
+        self.motorAngle.setPosition(float('inf'))
+        self.motorAngle.setVelocity(0.0)
+
+        #pSensor=self.getDevice("ps")
+        #pSensor.enable(timestep)
+        self.pSensor = self.getDevice("ps")
+        self.pSensor.enable(self.timestep)
         
         self.motor = self.getDevice("linear")
         #setter opp kamera
@@ -53,11 +44,6 @@ class platform (Robot):
             
             k = self.keyboard.getKey()
             
-            #while self.step(self.timestep) != -1:
-            #    position = sin(t * 2.0 * pi * F)  
-            #    self.motor.setPosition(position)
-            #    t += self.timestep / 1000.0
-            
             if k == ord('Q'):
                 file = open(self.filename[0], "w+")
                 content = str(self.depth)
@@ -70,14 +56,32 @@ class platform (Robot):
             if self.step(self.timestep) == -1:
                 break
     
-    def test(self):
+    def camera_movement(self):
         F = 2.0   # frequency 2 Hz
         t = 0.0   # elapsed simulation time
+        speed=1
+        k=0 
         while self.step(self.timestep) != -1:
+             # Verical controle
              position = sin(t * 2.0 * pi * F)
              self.motor.setPosition(position)
              t += self.timestep / 3000.0
+             # Angle controle 
+             self.motorAngle.setVelocity(speed)
+             k= self.pSensor.getValue()
+             print(k)    
+            
+ 
+             
+    def hingeJoint(self):  
+        speed=1
+        k=0 
+        while self.step(self.timestep) != -1:
+            self.motorAngle.setVelocity(speed)
+            k= self.pSensor.getValue()
+            print(k)    
             
 controller = platform()
-controller.test()
+controller.camera_movement()
+#controller.hingeJoint()
 controller.run()
