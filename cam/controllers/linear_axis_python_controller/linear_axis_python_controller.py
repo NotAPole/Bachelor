@@ -59,7 +59,7 @@ class platform (Robot):
     def camera_movement(self):
         F = 2.0   # frequency 2 Hz
         t = 0.0   # elapsed simulation time
-        speed=1
+        speed=2
         k=0 
         while self.step(self.timestep) != -1:
              # Verical controle
@@ -69,19 +69,17 @@ class platform (Robot):
              # Angle controle 
              self.motorAngle.setVelocity(speed)
              k= self.pSensor.getValue()
-             print(k)    
-            
+             print(k) 
+         
+             if (k>1.57):
+                 if (speed==1):
+                    speed=-1
+             if (k<0):
+                 if (speed==-1):
+                    speed=1
+             pass   
  
-             
-    def hingeJoint(self):  
-        speed=1
-        k=0 
-        while self.step(self.timestep) != -1:
-            self.motorAngle.setVelocity(speed)
-            k= self.pSensor.getValue()
-            print(k)    
             
 controller = platform()
 controller.camera_movement()
-#controller.hingeJoint()
 controller.run()
