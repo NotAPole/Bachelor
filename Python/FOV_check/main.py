@@ -15,6 +15,36 @@ import matplotlib.pyplot as plt
 import multiprocessing
 
 
+class Queue:
+    def __init__(self):
+        self.queue = []
+
+    def isEmpty(self) -> bool:
+        return True if len(self.queue) == 0 else False
+
+    def front(self):
+        return self.queue[-1]
+
+    def rear(self):
+        return self.queue[0]
+
+    def enqueue(self, x: int) -> None:
+        self.x = x
+        self.queue.insert(0, x)
+
+    def dequeue(self):
+        return self.queue.pop()
+
+    def pop(self, value):
+        return self.queue.remove(value)
+
+    def length(self) -> int:
+        return len(self.queue)
+
+    def copy(self):
+        return self.queue
+
+
 class Camera:
     def __init__(self, x, y, z, fov, focus, range):
         self.x = x
@@ -24,6 +54,7 @@ class Camera:
         self.focus = focus
         self.min_range = range[0]
         self.max_range = range[1]
+        self.checked_points = []
 
     def check_fov(self, point, possible_obstructions, planar_equations, step, tC, tP):
         x, y, z = self.calculate_coordinates(point, step)
@@ -32,9 +63,9 @@ class Camera:
         return confirmed_obstructions
 
     def calculate_coordinates(self, point, step):
-        x = np.linspace(self.x, point[0], step)
-        y = np.linspace(self.y, point[1], step)
-        z = np.linspace(self.z, point[2], step)
+        x = np.linspace(self.x, point[0], step, endpoint=False)
+        y = np.linspace(self.y, point[1], step, endpoint=False)
+        z = np.linspace(self.z, point[2], step, endpoint=False)
 
         return x, y, z
 
@@ -301,19 +332,65 @@ def get_rotated_vectors(sphere, fov): # NOT USED
     return [top_left_vector, bottom_left_vector, bottom_right_vector, top_right_vector]
 
 
-def check_fov(c, current_camera, pallet, remaining_points, steps, threshold_point, threshold_surface, seen_points=[]):
-    camera_progress = 0
-    for j in remaining_points:
-        pointObstructed = c.check_fov(j, pallet.faces, pallet.equations, steps, threshold_surface, threshold_point)
-        if pointObstructed:
-            pass
-        else:
-            seen_points.append(j)
-        camera_progress += 1
-        print("Camera " + str(current_camera) + " " + str(
-            round(camera_progress / len(remaining_points) * 100, 2)) + "% done")
+def check_fov(camera, current_camera, pallet, remaining_points, steps, threshold_point, threshold_surface, seen_points=[], queue=[], multi_processing=False):
+    if not multi_processing:
+        camera_progress = 0
+        for j in remaining_points:
+            point_obstructed = camera.check_fov(j, pallet.faces, pallet.equations, steps, threshold_surface, threshold_point)
+            if point_obstructed:
+                pass
+            else:
+                seen_points.append(j)
+            camera_progress += 1
+            print("Camera " + str(current_camera) + " " + str(
+                round(camera_progress / len(remaining_points) * 100, 2)) + "% done")
 
-    return seen_points
+        return seen_points
+
+    else:
+        while len(queue) > 0:
+            if queue[0] not in camera.checked_points:
+                current_point = queue.pop(0)
+                camera.checked_points.append(current_point)
+            elif len(queue) > 1:
+                queue_copy = queue
+                pos = 1
+                rounds = 0
+                checked = True
+                while checked:
+                    if pos < len(queue_copy):
+                        if queue_copy[pos] not in camera.checked_points:
+                            current_point = queue_copy[pos]
+                            try:
+                                queue.remove(current_point)
+                            except ValueError:
+                                pass
+                            else:
+                                camera.checked_points.append(current_point)
+                                checked = False
+                        else:
+                            pos += 1
+
+                    elif rounds == 3:
+                        print(f"Camera {current_camera} finished")
+                        return
+
+                    else:
+                        pos = 1
+                        rounds += 1
+                        print(f"Camera {current_camera} finished {rounds} rounds without new points")
+                        time.sleep(2)
+            else:
+                print(f"Camera {current_camera} finished")
+                return
+
+            print(len(queue))
+            point_obstructed = camera.check_fov(current_point, pallet.faces, pallet.equations, steps, threshold_surface, threshold_point)
+
+            if point_obstructed:
+                queue.append(current_point)
+            else:
+                seen_points.append(current_point)
 
 
 def read_file(file, additional_points):
@@ -403,9 +480,9 @@ def read_file(file, additional_points):
 
 def main():
     debug = False
-    fov_check = True
-    use_multi_processing = False
-    steps = 1
+    fov_check = False
+    use_multi_processing = True
+    steps = 10
     additional_points = 20
     threshold_surface = 1/steps*20
     threshold_point = 0.02
@@ -437,24 +514,28 @@ def main():
     else:
         cameras = []
         cameras.append(Camera(-74.7, -125.3, -86, (50, 25), (0, 0, 10), (80, 260)))
-        #cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), (80, 260)))
-        #cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), (80, 260)))
-        #cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), (80, 260)))
+        cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), (80, 260)))
+        cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), (80, 260)))
+        cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), (80, 260)))
+        cameras.append(Camera(180.7, -120, -86, (50, 25), (0, 0, 10), (0, 500)))
+        cameras.append(Camera(180.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
+        cameras.append(Camera(-80.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
         p1 = Pallet(pallet_surface_num)
         if use_multi_processing:
             manager = multiprocessing.Manager()
             seen_points = manager.list()
+            queue = manager.list()
+
+            for i in initial_points:
+                queue.append(i)
             process_pool = []
             for i, c in enumerate(cameras):
-                remaining_points, obstructed_points = c.check_points_in_fov(initial_points)
-                process_pool.append(multiprocessing.Process(target=check_fov, args=(c, i+1, p1, remaining_points, steps, threshold_point, threshold_surface, seen_points)))
+                remaining_points, obstructed_points, unit_vectors = c.check_points_in_fov(initial_points)
+                process_pool.append(multiprocessing.Process(target=check_fov, args=(c, i+1, p1, remaining_points, steps, threshold_point, threshold_surface, seen_points, queue, True)))
                 process_pool[i].start()
             for process in process_pool:
                 process.join()
 
-            for i in seen_points:
-                if seen_points.count(i) > 1:
-                    seen_points.remove(i)
         else:
             seen_points = []
             remaining_points = initial_points
@@ -474,12 +555,10 @@ def main():
                 obstructed_points.append(i)
 
         print("Total time used:", time.time() - start_time)
-
         try:
             show_plots(seen_points, obstructed_points, cameras)
         except KeyboardInterrupt:
             pass
-
 
 if __name__ == "__main__":
     main()
