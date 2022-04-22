@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.3822694066082007 -0.5196871132342081 -0.7640650529305144 5.848059729098198
-  position -15.715105661216214 -4.834899995332487 6.032484535421803
+  orientation 0.37880127063239116 -0.4454812634213421 -0.8112065343103511 5.857694377046848
+  position -7.647583433635481 -2.212065379226605 4.293388461995646
 }
 TexturedBackground {
 }
@@ -18,6 +18,17 @@ Robot {
   translation -0.455063 2.08189 0.677014
   rotation -0.35962501030811156 -0.6228880178541509 -0.6947520199140248 0.73621
   children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Cone {
+        bottomRadius 0.05
+        height 0.1
+      }
+    }
     RangeFinder {
       name "3d"
       width 1000
@@ -37,6 +48,17 @@ Robot {
   translation 2.24522 0.776501 0.696523
   rotation -0.26306507025373954 0.034633509249169935 -0.9641562574860377 -2.627125307179586
   children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Cone {
+        bottomRadius 0.05
+        height 0.1
+      }
+    }
     RangeFinder {
       name "3d"
       width 1000
@@ -60,6 +82,17 @@ Robot {
   translation -0.283123 1.44714 2.81119
   rotation -1.4851099999939728e-06 0.9999999999959415 -2.4313499999901325e-06 0.7736
   children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Cone {
+        bottomRadius 0.05
+        height 0.1
+      }
+    }
     Camera {
       width 1000
       height 1000
@@ -158,12 +191,13 @@ Robot {
                 }
                 Shape {
                   appearance PBRAppearance {
-                    baseColor 0 0.1 1
+                    baseColor 0 0 1
                     roughness 1
                     metalness 0
                   }
-                  geometry Box {
-                    size 0.1 0.1 0.1
+                  geometry Cone {
+                    bottomRadius 0.05
+                    height 0.1
                   }
                 }
               ]
