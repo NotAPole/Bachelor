@@ -3,27 +3,27 @@ from controller import Robot, Motor, Camera, RangeFinder
 from math import pi, sin
 
 class platform (Robot):
-    timestep = 64
+    timestep = 32
 
     def __init__(self):
         super(platform, self).__init__()
         
-        #m=self.getDevice("motor")
         self.motorAngle = self.getDevice("motor")
         self.motorAngle.setPosition(float('inf'))
         self.motorAngle.setVelocity(0.0)
 
-        #pSensor=self.getDevice("ps")
-        #pSensor.enable(timestep)
         self.pSensor = self.getDevice("ps")
         self.pSensor.enable(self.timestep)
         
+        self.vSensor = self.getDevice("vs")
+        self.vSensor.enable(self.timestep)
+        
         self.motor = self.getDevice("linear")
         #setter opp kamera
-        self.camera = self.getDevice('camera')
+        self.camera = self.getDevice('camera1')
         self.camera.enable(4*self.timestep)
         #setter opp rangefinderen
-        self.rangeFinder = self.getDevice('3d')
+        self.rangeFinder = self.getDevice('3d1')
         self.rangeFinder.enable(4*self.timestep)
         #setter opp keyboard detection
         self.keyboard.enable(self.timestep)
@@ -43,6 +43,7 @@ class platform (Robot):
             self.image = self.camera.getImageArray()
             
             k = self.keyboard.getKey()
+
             
             if k == ord('Q'):
                 file = open(self.filename[0], "w+")
@@ -55,31 +56,44 @@ class platform (Robot):
                 file.close()
             if self.step(self.timestep) == -1:
                 break
-    
     def camera_movement(self):
-        F = 2.0   # frequency 2 Hz
-        t = 0.0   # elapsed simulation time
+
+  
         speed=1
-        k=0 
+        vertical_value = 0 
+        horizontal_value = 0
+        position = 0.0
+        constant = 1
         while self.step(self.timestep) != -1:
-             # Verical controle
-             position = sin(t * 2.0 * pi * F)
-             self.motor.setPosition(position)
-             t += self.timestep / 3000.0
-             # Angle controle 
-             self.motorAngle.setVelocity(speed)
-             k= self.pSensor.getValue()
-             print(k) 
+
+            n = self.keyboard.getKey()  
+            
+            # Verical controle
+            self.motor.setPosition(position)
+            vertical_value = self.vSensor.getValue()
+            print("Vertical position", vertical_value)
+            
+            # Angle controle 
+            self.motorAngle.setVelocity(speed)
+            horizontal_value = self.pSensor.getValue()
+            print("Horizontal angle", horizontal_value)   
+            
+            if n == ord('Q'):
+                print("Going down")
+                position -= constant
+                speed -= 1
+
          
-             if (k>0.3):
-                 if (speed==1):
-                    speed=-1
-             if (k<-0.3):
-                 if (speed==-1):
-                    speed=1
-             pass   
+
+            if n == ord('O'):
+                print("Going up")
+                position += constant
+                speed += 1
+   
+            
+            pass   
  
             
 controller = platform()
 controller.camera_movement()
-controller.run()
+#controller.run()

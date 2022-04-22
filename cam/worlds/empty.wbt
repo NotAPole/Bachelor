@@ -3,7 +3,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation 0.3822694066082007 -0.5196871132342081 -0.7640650529305144 5.848059729098198
-  position -9.755915336266519 -0.7623130446739543 3.765649965241378
+  position -15.715105661216214 -4.834899995332487 6.032484535421803
 }
 TexturedBackground {
 }
@@ -118,16 +118,18 @@ Robot {
       jointParameters JointParameters {
       }
       device [
+        PositionSensor {
+          name "vs"
+        }
         LinearMotor {
           name "linear"
-          minPosition -0.6
-          maxPosition 1.2
-          multiplier 4
+          maxVelocity 5
+          minPosition -1.6
         }
       ]
       endPoint Solid {
-        translation 0.07 -0.15 0.6
-        rotation 0 0 1 -1.5707953071795862
+        translation 0.07 -0.15 1.7
+        rotation 0 0 1 -1.5708
         children [
           HingeJoint {
             jointParameters HingeJointParameters {
@@ -139,17 +141,19 @@ Robot {
               }
               RotationalMotor {
                 name "motor"
-                minPosition -0.7
-                maxPosition 0.7
+                maxVelocity 100
+                minPosition -0.9
+                maxTorque 100
               }
             ]
             endPoint Solid {
-              rotation 0 1 0 0
+              rotation 0 1 0 0.3926996938995746
               children [
                 Camera {
+                  name "camera1"
                 }
                 RangeFinder {
-                  name "3d"
+                  name "3d1"
                   maxRange 4
                 }
                 Shape {
