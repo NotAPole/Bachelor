@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.37880127063239116 -0.4454812634213421 -0.8112065343103511 5.857694377046848
-  position -7.647583433635481 -2.212065379226605 4.293388461995646
+  orientation 0.44523677622639163 -0.5777809320108612 -0.6840565822358489 4.9276018209713115
+  position -1.4849260457538718 -0.8909377179811906 7.225433713224223
 }
 TexturedBackground {
 }
@@ -144,8 +144,8 @@ Solid {
   name "Sort dummy"
 }
 Robot {
-  translation 1.14 3.12 0.6
-  rotation 0 1 0 0
+  translation -0.583882 2.11856 0.6
+  rotation 0 0 1 1.0472
   children [
     SliderJoint {
       jointParameters JointParameters {
