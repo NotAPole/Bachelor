@@ -482,7 +482,7 @@ def main():
     debug = False
     fov_check = False
     use_multi_processing = True
-    steps = 10000
+    steps = 5000
     additional_points = 20
     threshold_surface = 1/steps*20
     threshold_point = 0.02
@@ -511,9 +511,9 @@ def main():
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors, color="blue")
 
     else:
-        cameras.append(Camera(-74.7, -125.3, -80, (50, 25), (0, 0, 10), (80, 260)))
-        cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), (80, 260)))
-        #cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), (80, 260)))
+        cameras.append(Camera(-40, -40, -80, (70, 55), (40, 40, 5), (25, 260)))
+        cameras.append(Camera(160, 160, -80, (70, 55), (40, 80, 0), (25, 260)))
+        cameras.append(Camera(-40, -40, 80, (70, 55), (40, 40, 5), (25, 260)))
         #cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), (80, 260)))
         #cameras.append(Camera(180.7, -120, -86, (50, 25), (0, 0, 10), (0, 500)))
         #cameras.append(Camera(180.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
