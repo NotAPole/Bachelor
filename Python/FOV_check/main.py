@@ -482,14 +482,14 @@ def main():
     debug = False
     fov_check = False
     use_multi_processing = True
-    steps = 10
+    steps = 10000
     additional_points = 20
     threshold_surface = 1/steps*20
     threshold_point = 0.02
     start_time = time.time()
     pallet_surface_num, initial_points = read_file("euro.txt", additional_points)
+    cameras = []
     if debug:
-        cameras = []
         cameras.append(Camera(-10, -10, 0, (1, 1), (0, 0, 100), (0-150)))
         p1 = Pallet(pallet_surface_num)
 
@@ -506,20 +506,18 @@ def main():
         #initial_points.append([10, 10, 1000])
         #initial_points.append([20, 20, 1000])
         #initial_points.append([30, 30, 1000])
-        cameras = []
         cameras.append(Camera(-10, -10, 0, (39, 25), (0, 0, 10), (0, 50)))
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors, color="blue")
 
     else:
-        cameras = []
-        cameras.append(Camera(-74.7, -125.3, -86, (50, 25), (0, 0, 10), (80, 260)))
+        cameras.append(Camera(-74.7, -125.3, -80, (50, 25), (0, 0, 10), (80, 260)))
         cameras.append(Camera(116.4, 257.2, -86, (70, 55), (0, 0, 0), (80, 260)))
-        cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), (80, 260)))
-        cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), (80, 260)))
-        cameras.append(Camera(180.7, -120, -86, (50, 25), (0, 0, 10), (0, 500)))
-        cameras.append(Camera(180.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
-        cameras.append(Camera(-80.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
+        #cameras.append(Camera(60, 260, 94.4, (70, 55), (40, 60, 10), (80, 260)))
+        #cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), (80, 260)))
+        #cameras.append(Camera(180.7, -120, -86, (50, 25), (0, 0, 10), (0, 500)))
+        #cameras.append(Camera(180.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
+        #cameras.append(Camera(-80.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
         p1 = Pallet(pallet_surface_num)
         if use_multi_processing:
             manager = multiprocessing.Manager()
@@ -559,6 +557,7 @@ def main():
             show_plots(seen_points, obstructed_points, cameras)
         except KeyboardInterrupt:
             pass
+
 
 if __name__ == "__main__":
     main()
