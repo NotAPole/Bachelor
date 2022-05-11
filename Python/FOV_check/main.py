@@ -2,12 +2,12 @@
 README
 
 @author: Pål-André Furnes
-This project is developed to be used for proof-of-concept in my bachelor thesis.
+This project is developed to be used for proof-of-concept in my bachelor's thesis.
 A pallet is represented by an array of 3D points.
-A camera is represented by a single point in space facing a specified direction with a specified field of view.
+A camera is represented by a single point in space facing a specified direction along with a specified field of view.
 The resulting 3D-plot shows green and red points. Green means seen, red means unseen.
-In fov-check-mode the resulting plot will show points within the camera's fov as green, regardless if it can be seen
-or not. This mode is used to verify camera placement.
+In fov-check-mode the resulting plot will show points within the camera's fov as blue, regardless if it can actually
+be seen or not. This mode is used to verify camera placement.
 """
 import time
 import numpy as np
