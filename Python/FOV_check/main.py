@@ -7,8 +7,10 @@ A pallet is represented by an array of 3D points.
 A camera is represented by a single point in space facing a specified direction along with a specified field of view.
 The resulting 3D-plot shows green and red points. Green means seen, red means unseen.
 In fov-check-mode the resulting plot will show points within the camera's fov as blue, regardless if it can actually
-be seen or not. This mode is used to verify camera placement.
+be seen or not. This mode is used to verify camera placements where the objective is to see as much of the points as
+possible.
 """
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,32 +21,31 @@ class Queue:
     def __init__(self):
         self.queue = []
 
+    # Check to see whether or not queue is empty
     def isEmpty(self) -> bool:
         return True if len(self.queue) == 0 else False
 
+    # Return the first element of the queue
     def front(self):
-        return self.queue[-1]
-
-    def rear(self):
         return self.queue[0]
 
-    def enqueue(self, x: int) -> None:
-        self.x = x
-        self.queue.insert(0, x)
+    # Return the last element of the queue
+    def rear(self):
+        return self.queue[-1]
 
-    def dequeue(self):
-        return self.queue.pop()
-
+    # Return the value of and remove the element passed to the method
     def pop(self, value):
         return self.queue.remove(value)
 
+    # Return length of queue
     def length(self) -> int:
         return len(self.queue)
 
+    # Return a copy of the queue
     def copy(self):
         return self.queue
 
-
+# Class includes all specification for camera and methods used for FOV calculations
 class Camera:
     def __init__(self, x, y, z, fov, focus, range):
         self.x = x
@@ -56,12 +57,14 @@ class Camera:
         self.max_range = range[1]
         self.checked_points = []
 
+    # Return list of points not seen by the camera
     def check_fov(self, point, possible_obstructions, planar_equations, step, tC, tP):
         x, y, z = self.calculate_coordinates(point, step)
         confirmed_obstructions = self.check_for_obstructions(planar_equations, possible_obstructions, x, y, z, point, step, tC, tP)
 
         return confirmed_obstructions
 
+    # Return array of coordinates for the ray between camera and point
     def calculate_coordinates(self, point, step):
         x = np.linspace(self.x, point[0], step, endpoint=False)
         y = np.linspace(self.y, point[1], step, endpoint=False)
@@ -69,19 +72,30 @@ class Camera:
 
         return x, y, z
 
+    # Checks if ray passes through any surface
     @staticmethod
-    def check_for_obstructions(equations, surfaces, x, y, z, point, step, threshold_crossing, threshold_point):
+    def check_for_obstructions(equations, surfaces, x, y, z, point,
+                               step, threshold_crossing, threshold_point):
         for j in range(step):
             for k, l in enumerate(equations):
                 planar_result = l[0] * (x[j] - l[1]) + l[2] * (y[j] - l[3]) + l[4] * (z[j] - l[5])
                 crossing_plane = abs(planar_result) < threshold_crossing
                 if crossing_plane:
-                    corners_x = (np.min([surfaces[k][0][0], surfaces[k][1][0], surfaces[k][2][0], surfaces[k][3][0]]),
-                                 np.max([surfaces[k][0][0], surfaces[k][1][0], surfaces[k][2][0], surfaces[k][3][0]]))
-                    corners_y = (np.min([surfaces[k][0][1], surfaces[k][1][1], surfaces[k][2][1], surfaces[k][3][1]]),
-                                 np.max([surfaces[k][0][1], surfaces[k][1][1], surfaces[k][2][1], surfaces[k][3][1]]))
-                    corners_z = (np.min([surfaces[k][0][2], surfaces[k][1][2], surfaces[k][2][2], surfaces[k][3][2]]),
-                                 np.max([surfaces[k][0][2], surfaces[k][1][2], surfaces[k][2][2], surfaces[k][3][2]]))
+                    # Calculates coordinates of margin-box around surface
+                    corners_x = (np.min([surfaces[k][0][0], surfaces[k][1][0],
+                                         surfaces[k][2][0], surfaces[k][3][0]]),
+                                 np.max([surfaces[k][0][0], surfaces[k][1][0],
+                                         surfaces[k][2][0], surfaces[k][3][0]]))
+                    corners_y = (np.min([surfaces[k][0][1], surfaces[k][1][1],
+                                         surfaces[k][2][1], surfaces[k][3][1]]),
+                                 np.max([surfaces[k][0][1], surfaces[k][1][1],
+                                         surfaces[k][2][1], surfaces[k][3][1]]))
+                    corners_z = (np.min([surfaces[k][0][2], surfaces[k][1][2],
+                                         surfaces[k][2][2], surfaces[k][3][2]]),
+                                 np.max([surfaces[k][0][2], surfaces[k][1][2],
+                                         surfaces[k][2][2], surfaces[k][3][2]]))
+                    # Checks whether or not ray passes through surface and that the surface is not part of the same one
+                    # as the point itself
                     confirmed_obstruction = (corners_x[0] - threshold_point) <= x[j] <= (corners_x[1] + threshold_point) and \
                              (corners_y[0] - threshold_point) <= y[j] <= (corners_y[1] + threshold_point) and \
                              (corners_z[0] - threshold_point) <= z[j] <= (corners_z[1] + threshold_point) and \
@@ -94,6 +108,7 @@ class Camera:
 
         return False
 
+    # Calculates field of view vectors and determines which points are within the field of view
     def check_points_in_fov(self, points):
         focus_vector = self.get_focus_vector()
         focus_axis_1 = self.get_focus_axis_1(focus_vector)
@@ -125,16 +140,19 @@ class Camera:
         possible_points = []
         for i in points:
             if i not in points_outside_fov:
+                # Points that are not outside of field of view are within
                 possible_points.append(i)
 
         return possible_points, points_outside_fov, unit_vectors
 
+    # Return vector between camera and focus point
     def get_focus_vector(self):
         vector = np.array([self.focus[0]-self.x, self.focus[1]-self.y, self.focus[2]-self.z])
         unit_vector = vector / np.linalg.norm(vector)
 
         return unit_vector
 
+    # Return vector perpendicular to the focus vector, along the XY-plane
     @staticmethod
     def get_focus_axis_1(focus_vector):
         spread_radians = np.pi
@@ -155,51 +173,15 @@ class Camera:
         else:
             return vector / (vector**2).sum()**0.5
 
-    @staticmethod
-    def get_spread_vectors_z(focus_vector, rotation_points, spread_degrees): # NOT USED
-        four_dimension_focus_vector = np.array([[focus_vector[0]],
-                                          [focus_vector[1]],
-                                          [focus_vector[2]],
-                                          [1]])
-        spread_radians = spread_degrees*np.pi/180
 
-        transpose_matrix_1 = np.array([[1, 0, 0, -rotation_points[0][0]],
-                                     [0, 1, 0, -rotation_points[0][1]],
-                                     [0, 0, 1, -rotation_points[0][2]],
-                                     [0, 0, 0, 1]])
-        inv_transpose_matrix_1 = np.linalg.inv(transpose_matrix_1)
-
-        rotational_vector = np.array([rotation_points[0][0] - rotation_points[1][0], rotation_points[0][1] - rotation_points[1][1], rotation_points[0][2] - rotation_points[1][2]])
-        unit_rotational_vector = rotational_vector / np.linalg.norm(rotational_vector)
-        a, b, c = unit_rotational_vector[0], unit_rotational_vector[1], unit_rotational_vector[2]
-        d = np.sqrt(b**2 + c**2)
-        rotational_matrix_x = np.array([[1, 0, 0, 0],
-                                      [0, 1, 0, 0],
-                                      [0, 0, 1, 0],
-                                      [0, 0, 0, 1]])
-        inv_rotational_matrix_x = np.linalg.inv(rotational_matrix_x)
-        rotational_matrix_y = np.array([[d, 0, -a, 0],
-                                      [0, 1, 0, 0],
-                                      [a, 0, d, 0],
-                                      [0, 0, 0, 1]])
-        inv_rotational_matrix_y = np.linalg.inv(rotational_matrix_y)
-        rotational_matrix_z = np.array([[np.cos(spread_radians/2), np.sin(spread_radians/2), 0, 0],
-                                      [-np.sin(spread_radians/2), np.cos(spread_radians/2), 0, 0],
-                                      [0, 0, 1, 0],
-                                      [0, 0, 0, 1]])
-        rotated_vector = inv_transpose_matrix_1@inv_rotational_matrix_x@inv_rotational_matrix_y@rotational_matrix_z@rotational_matrix_y@rotational_matrix_x@transpose_matrix_1@four_dimension_focus_vector
-        rotated_vector = [rotated_vector[0, 0], rotated_vector[1, 0], rotated_vector[2, 0]]
-        unit_rotated_vector = rotated_vector / np.linalg.norm(rotated_vector)
-
-        return unit_rotated_vector
-
-
+# Class used to represent pallets as objects
 class Pallet:
     def __init__(self, faces):
         self.faces = faces
         self.equations = get_planar_equations(faces)
 
 
+# Shows points as seen or not seen in 3D-plot
 def show_plots(seen_points, obstructed_points, cameras, unit_vectors=None, color=None):
     X_seen, Y_seen, Z_seen = [], [], []
     for j in seen_points:
@@ -221,11 +203,13 @@ def show_plots(seen_points, obstructed_points, cameras, unit_vectors=None, color
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
+    # Add points to plot
     if color is None:
         ax.scatter(X_seen, Y_seen, Z_seen, color="green", marker=".")
     else:
         ax.scatter(X_seen, Y_seen, Z_seen, color=color, marker=".")
     ax.scatter(X_obs, Y_obs, Z_obs, color="red", marker=".")
+    # Add field of view vectors to the plot
     for i in cameras:
         ax.scatter(i.x, i.y, i.z, color="black")
         fov_vectors = get_camera_fov(i)
@@ -246,6 +230,7 @@ def show_plots(seen_points, obstructed_points, cameras, unit_vectors=None, color
     plt.show()
 
 
+# Calculate planar equations for each of the surfaces of the pallet
 def get_planar_equations(surfaces):
     equations = []
     for j in surfaces:
@@ -258,6 +243,7 @@ def get_planar_equations(surfaces):
     return equations
 
 
+# Return the vectors representing the field of view of the camera
 def get_camera_fov(camera):
     focus_vector = camera.get_focus_vector()
     focus_axis_1 = camera.get_focus_axis_1(focus_vector)
@@ -266,15 +252,17 @@ def get_camera_fov(camera):
 
     return fov_vectors
 
-
+# Return components of planar equation as individual elements
 def get_plane(point, normal):
     return normal[0], point[0], normal[1], point[1], normal[2], point[2]
 
 
+# Return second focus axis perpendicular to the first and the focus vector
 def get_focus_axis_2(focus_vector, focus_axis):
     return np.cross(focus_vector, focus_axis)
 
 
+# Return field of view vectors for each camera as a list
 def get_fov_vectors(vector_1, vector_2, focus_vector, fov):
     left_turn_radians = fov[0] * np.pi / 180 / 2
     top_turn_radians = fov[1] * np.pi / 180 / 2
@@ -292,47 +280,10 @@ def get_fov_vectors(vector_1, vector_2, focus_vector, fov):
     return [vector_top_left, vector_bottom_left, vector_bottom_right, vector_top_right]
 
 
-def get_fov_surfaces(point, vectors):
-    surfaces = []
-    for i in range(len(vectors)-1):
-        surfaces.append([point, point + vectors[i], point + vectors[i+1]])
-    surfaces.append([point, point + vectors[-1], point + vectors[0]])
 
-    return surfaces
-
-
-def get_spherical_coordinates(cartesian): # NOT USED
-    r = np.sqrt(cartesian[0]**2 + cartesian[1]**2 + cartesian[2]**2)
-    theta = np.arctan(cartesian[1]/cartesian[0])
-    phi = np.arccos(cartesian[2]/r)
-
-    return [r, theta, phi]
-
-
-def get_cartesian_coordinates(sphere): # NOT USED
-    cartesian_vectors = []
-    for i in sphere:
-        x = i[0] * np.cos(i[1]) * np.sin(i[2])
-        y = i[0] * np.sin(i[1]) * np.sin(i[2])
-        z = i[0] * np.cos(i[2])
-        cartesian_vectors.append([x, y, z])
-
-    return cartesian_vectors
-
-
-def get_rotated_vectors(sphere, fov): # NOT USED
-    theta_rotation = fov[0]*np.pi/180/2
-    phi_rotation = fov[1]*np.pi/180/2
-    r, theta, phi = sphere
-    top_left_vector = [r, theta+theta_rotation, phi-phi_rotation]
-    bottom_left_vector = [r, theta+theta_rotation, phi+phi_rotation]
-    bottom_right_vector = [r, theta-theta_rotation, phi+phi_rotation]
-    top_right_vector = [r, theta - theta_rotation, phi - phi_rotation]
-
-    return [top_left_vector, bottom_left_vector, bottom_right_vector, top_right_vector]
-
-
+# Return list of seen points based on camera specifications and pallet surfaces
 def check_fov(camera, current_camera, pallet, remaining_points, steps, threshold_point, threshold_surface, seen_points=[], queue=[], multi_processing=False):
+    # If the setup specifies not using multi processing
     if not multi_processing:
         camera_progress = 0
         for j in remaining_points:
@@ -346,7 +297,7 @@ def check_fov(camera, current_camera, pallet, remaining_points, steps, threshold
                 round(camera_progress / len(remaining_points) * 100, 2)) + "% done")
 
         return seen_points
-
+    # If setup specifies using multi processing
     else:
         while len(queue) > 0:
             if queue[0] not in camera.checked_points:
@@ -370,7 +321,7 @@ def check_fov(camera, current_camera, pallet, remaining_points, steps, threshold
                                 checked = False
                         else:
                             pos += 1
-
+                    # When three passes of the remaining points do not return any unchecked points
                     elif rounds == 3:
                         print(f"Camera {current_camera} finished")
                         return
@@ -380,10 +331,11 @@ def check_fov(camera, current_camera, pallet, remaining_points, steps, threshold
                         rounds += 1
                         print(f"Camera {current_camera} finished {rounds} rounds without new points")
                         time.sleep(2)
+            # If no points remain unseen
             else:
                 print(f"Camera {current_camera} finished")
                 return
-
+            # Print remaining number of unseen points
             print(len(queue))
             point_obstructed = camera.check_fov(current_point, pallet.faces, pallet.equations, steps, threshold_surface, threshold_point)
 
@@ -393,6 +345,7 @@ def check_fov(camera, current_camera, pallet, remaining_points, steps, threshold
                 seen_points.append(current_point)
 
 
+# Import .txt-file and return surfaces and points as arrays
 def read_file(file, additional_points):
     with open(file) as palletFile:
         pallet_surface_text = palletFile.read()
@@ -404,6 +357,7 @@ def read_file(file, additional_points):
         initial_points = []
         for i in range(int(len(pallet_surface_text) / 12.0)):
             pallet_surface_temp = []
+            # Every four points represent a surface
             for j in range(4):
                 initial_points.append([float(pallet_surface_text[i * 12 + j * 3]),
                                         float(pallet_surface_text[i * 12 + 1 + j * 3]),
@@ -412,10 +366,11 @@ def read_file(file, additional_points):
                                           float(pallet_surface_text[i * 12 + 1 + j * 3]),
                                           float(pallet_surface_text[i * 12 + 2 + j * 3])])
             pallet_surface_num.append(pallet_surface_temp)
+        # Removes duplications of points
         for j in initial_points:
             if initial_points.count(j) > 1:
                 initial_points.remove(j)
-
+        # Add specified amount of points along sides of surfaces
         for j in pallet_surface_num:
             if j[0][0] != j[1][0]:
                 for k in np.linspace(j[0][0], j[1][0], additional_points, endpoint=False):
@@ -478,19 +433,21 @@ def read_file(file, additional_points):
     return pallet_surface_num, initial_points
 
 
+# Setup and main program
 def main():
-    debug = False
-    fov_check = False
-    use_multi_processing = True
-    steps = 5000
-    additional_points = 20
-    threshold_surface = 1/steps*20
-    threshold_point = 0.02
+    debug = False  # Debug mode
+    fov_check = True  # FOV check mode
+    use_multi_processing = False  # Multi processing mode
+    steps = 5000  # Number of discretization points between camera and point
+    additional_points = 20  # Additional points along each surface
+    threshold_surface = 1/steps*20  # Margins of the planar equations
+    threshold_point = 0.02  # Margin for deciding whether point is part of a crossed surface
     start_time = time.time()
     pallet_surface_num, initial_points = read_file("euro.txt", additional_points)
     cameras = []
+    # Mode used to check if camera FOV is correct
     if debug:
-        cameras.append(Camera(-10, -10, 0, (1, 1), (0, 0, 100), (0-150)))
+        cameras.append(Camera(-10, -10, 0, (1, 1), (0, 0, 100), (0, 150)))
         p1 = Pallet(pallet_surface_num)
 
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
@@ -501,24 +458,19 @@ def main():
             if i not in seen_points_camera:
                 obstructed_points.append(i)
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors)
-
+    # Mode used to check which points are within field of view. Does not check for obstructions
     elif fov_check:
-        #initial_points.append([10, 10, 1000])
-        #initial_points.append([20, 20, 1000])
-        #initial_points.append([30, 30, 1000])
-        cameras.append(Camera(-10, -10, 0, (39, 25), (0, 0, 10), (0, 50)))
+        cameras.append(Camera(-80, -60, 0, (33, 25), (40, 60, 10), (50, 200)))
         points_in_fov, not_possible_points, unit_vectors = cameras[0].check_points_in_fov(initial_points)
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors, color="blue")
-
+    # Checks all point to see whether or not they are seen by any of the cameras
     else:
-        cameras.append(Camera(-40, -40, -80, (70, 55), (40, 40, 5), (25, 260)))
-        cameras.append(Camera(160, 160, -80, (70, 55), (40, 80, 0), (25, 260)))
-        cameras.append(Camera(-40, -40, 80, (70, 55), (40, 40, 5), (25, 260)))
-        #cameras.append(Camera(0, -50, 0, (70, 55), (0, 0, 20), (80, 260)))
-        #cameras.append(Camera(180.7, -120, -86, (50, 25), (0, 0, 10), (0, 500)))
-        #cameras.append(Camera(180.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
-        #cameras.append(Camera(-80.7, 120, -86, (50, 25), (0, 0, 10), (0, 500)))
+        cameras.append(Camera(-142, -122, -104, (39, 25), (40, 40, 5), (120, 300)))
+        cameras.append(Camera(-142, -122, 238, (39, 25), (40, 40, 5), (120, 300)))
+        cameras.append(Camera(222, 242, -104, (39, 25), (40, 40, 5), (120, 300)))
+
         p1 = Pallet(pallet_surface_num)
+        # Checks seen points using multi processing
         if use_multi_processing:
             manager = multiprocessing.Manager()
             seen_points = manager.list()
@@ -533,7 +485,7 @@ def main():
                 process_pool[i].start()
             for process in process_pool:
                 process.join()
-
+        # Checks seen points one camera at a time
         else:
             seen_points = []
             remaining_points = initial_points
@@ -548,11 +500,13 @@ def main():
                         remaining_points.append(j)
 
         obstructed_points = []
+        # All unseen points is added to seperate list
         for i in initial_points:
             if i not in seen_points:
                 obstructed_points.append(i)
 
         print("Total time used:", time.time() - start_time)
+        # Displays results in 3D-plot
         try:
             show_plots(seen_points, obstructed_points, cameras)
         except KeyboardInterrupt:
