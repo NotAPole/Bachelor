@@ -1,0 +1,87 @@
+Id;Default
+242;
+377;%1.2f m
+210;%s
+857;------>
+1232;1
+1699;10
+1682;2
+1336;3
+2102;4
+319;5
+1432;6
+830;7
+1654;8
+887;9
+426;<-----
+989;Axis 1
+132;Axis 2
+347;Axis 3
+348;Axis 4
+701;Axis 5
+1208;Back
+1592;Buffer status
+1486;Cancel
+487;Down
+2786;Empty
+624;Enable
+186;ENABLED
+2871;End Manual Control
+43;Error
+723;ERROR
+1933;Feed out
+117;Feeding out
+3026;Full
+599;Has pallet
+2256;High
+2883;Id: %d
+2487;Last pallet id
+755;Low
+265;MACHINE READY
+345;Main
+107;MAIN.Machine.Tower.ActualPos
+679;Manual Control
+115;Manual Operation Deactivated
+872;Move left
+175;MOVE LEFT
+587;Move right
+850;MOVE RIGHT
+2947;Mute
+3046;No
+1515;Platform status
+746;Position
+201;Ready
+715;READY
+91;Reset
+714;Robot
+119;RUNNING
+1248;Show more (%d)
+937;Speed
+111;Speed:
+943;Start
+135;START
+589;Start 
+2600;Starting in: %d s
+463;Status
+346;Stop
+805;STOP
+2202;Testing Disabled
+938;Testing Enabled
+1915;Toggle the options to enable/disable axis errors. Once disabled, the axis will ignore all errors, and the machine cannot run autonomously.
+416;Tower 1
+461;Tower 10
+206;Tower 2
+567;Tower 3
+419;Tower 4
+65;Tower 5
+153;Tower 6
+774;Tower 7
+133;Tower 8
+940;Tower 9
+350;Towers
+86;TURN ON MACHINE
+134;Unmute
+705;Up
+2770;Yes
+1960;‹
+1985;›

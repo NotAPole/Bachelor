@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <GVL Name="GVL" Id="{bbef5aca-9751-4345-a16a-b08174c7e4ef}">
+    <Declaration><![CDATA[VAR_GLOBAL
+
+	eMachineState					: E_MachineState;
+	UI_EnableHighSpeed				: BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

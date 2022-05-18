@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Machine" Id="{7ef33cb4-4633-4fdb-af8e-925e40a544a1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Machine
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR
+	Tower : FB_Tower;
+	//fManualLowSpeed		: LREAL;
+	//fManualHighSpeed	: LREAL;	
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Tower();
+
+(*
+MCJog( Axis := 	stAxis, Velocity := fManualVelocity, Mode := MC_JOGMODE_CONTINOUS );				
+McPower(Axis := stAxis);
+McReset(Axis := stAxis); 
+ActUpdateAxisData();
+ActUpdateManVelocity();
+
+
+CASE GVL.eMachineState OF
+	
+
+	// The machine starts up in Error state
+	E_MachineState.Error:	
+	
+	// Changes statet to Ready state
+	IF startButton THEN
+		readyLamp := TRUE;
+		SetState( E_MachineState.Ready );
+	END_IF
+	
+	
+	
+	E_MachineState.Ready:
+	McReset.Execute := TRUE;
+		IF McReset.Done THEN 
+			McReset.Execute := FALSE; 
+		END_IF 	
+	
+		IF (ActualPos < lowerLimit OR ActualPos > upperLimit) AND enableButton THEN
+			 
+			IF ActualPos > upperLimit AND enableButton THEN
+				McPower.Enable 			:= TRUE;
+				McPower.Enable_Negative := TRUE;
+				SetState( E_MachineState.Running );
+			END_IF
+			
+			IF ActualPos < lowerLimit AND enableButton THEN 
+				McPower.Enable 			:= TRUE;
+				McPower.Enable_Positive := TRUE;
+				SetState( E_MachineState.Running );
+			END_IF
+		END_IF
+		
+ 		// Enables the axis for movement
+		IF enableButton AND ActualPos > lowerLimit AND ActualPos < upperLimit  THEN
+			McPower.Enable 			:= TRUE;
+			McPower.Enable_Positive := TRUE; 
+			McPower.Enable_Negative := TRUE;		
+			SetState( E_MachineState.Running );
+		END_IF
+		
+		// Disables the axis for movement
+		IF stopButton THEN
+			McPower.Enable 			:= FALSE;
+			McPower.Enable_Positive := FALSE; 
+			McPower.Enable_Negative := FALSE;
+			enableButton 			:= FALSE;
+			MCJog.JogForward 		:= FALSE; 
+			MCJog.JogBackwards 		:= FALSE;
+		END_IF
+			
+			
+	E_MachineState.Running: 	
+		
+		// forward and backward movement logic
+		IF forwardButton OR backwardButton THEN
+			IF (ActualPos > lowerLimit AND ActualPos < upperLimit) THEN 
+				McPower.Enable_Positive := TRUE; 
+				McPower.Enable_Negative := TRUE;
+			END_IF 
+			IF forwardButton THEN 
+				MCJog.JogForward 	:= TRUE;
+				MCJog.JogBackwards 	:= FALSE;
+			END_IF 
+			
+			IF backwardButton THEN
+				MCJog.JogBackwards 	:= TRUE; 
+				MCJog.JogForward 	:= FALSE;
+			END_IF 
+		ELSE 
+			MCJog.JogBackwards 	:= FALSE;
+			MCJog.JogForward 	:= FALSE;
+		END_IF
+		
+		// Disables the axis for movement
+		IF stopButton THEN
+			McPower.Enable 			:= FALSE;
+			McPower.Enable_Positive := FALSE; 
+			McPower.Enable_Negative := FALSE;
+			enableButton 			:= FALSE;
+			MCJog.JogForward 		:= FALSE; 
+			MCJog.JogBackwards 		:= FALSE;
+	
+			SetState( E_MachineState.Ready );
+		END_IF  
+		
+		IF (ActualPos < lowerLimit OR ActualPos > upperLimit) AND McPower.Enable_Positive AND McPower.Enable_Negative THEN 
+			McPower.Enable 			:= FALSE;
+			McPower.Enable_Positive := FALSE; 
+			McPower.Enable_Negative := FALSE;
+			enableButton 			:= FALSE;
+			MCJog.JogForward 		:= FALSE; 
+			MCJog.JogBackwards 		:= FALSE;
+	
+			SetState( E_MachineState.Error );
+		END_IF
+		
+
+END_CASE
+
+*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Machine">
+      <LineId Id="21" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="176" Count="12" />
+      <LineId Id="190" Count="4" />
+      <LineId Id="198" Count="4" />
+      <LineId Id="329" Count="35" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="251" Count="12" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="271" Count="3" />
+      <LineId Id="281" Count="3" />
+      <LineId Id="290" Count="9" />
+      <LineId Id="306" Count="10" />
+      <LineId Id="321" Count="4" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="327" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
