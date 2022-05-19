@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="F_HeaderErrorMessage" Id="{43c8eb4b-e9ef-4cd2-bfcc-280bd910c30e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_HeaderErrorMessage : STRING
+VAR_INPUT
+	ErrorID		: UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF ErrorID = 0 THEN
+	F_HeaderErrorMessage := 'None';
+ELSIF ErrorID = 1 THEN
+	F_HeaderErrorMessage := 'Startup safety';
+END_IF
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_HeaderErrorMessage">
+      <LineId Id="60" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="52" Count="3" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<TcLicenseInfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2011/11/TcLicenseInfo">
+	<LicenseInfo>
+		<SystemId>{F18AB129-DB9A-8149-4ED8-C8A277459FAE}</SystemId>
+		<IssueTime>2022-05-15T08:57:00</IssueTime>
+		<ExpireTime>2022-05-23T00:00:00</ExpireTime>
+		<LicenseKey>5c55ede8ce1b60486eb030e38d67902387af29e5c8a756060a2dd4ed7b8f0af54f8a93495f6e75025f765aafdd575064171fe0ee58d3f1be04a34595e7d5fb40083f9815043729e39f82804c058dbf28e3fe68ef4c6b7ba2c191723502456c138d6e24c5ef42acff182d76d90e2d514b4f0d701f8e9ed0ffe57024e0c97243e4b04397c85903cc828c037442d79890c124c6aaf86c05d7b75c664e78e6738b76c620ab0126d6d4d4f8987405d1f6e6506b84445d9d1f4b32854cfa2684ba33c4979008eff7c13f957bc29fce4c6e2d60c965c57fe61128a24b6cd31af2deab275fc83e2d3872baec75eb64663da56164c1a5f90244bc884eee7fc1510be7cae8</LicenseKey>
+		<License>
+			<LicenseId>{4C256767-E6E6-4AF5-BD68-9F7ABAD0C200}</LicenseId>
+			<Name>TC3 ADS</Name>
+			<OrderNo>TC1000</OrderNo>
+		</License>
+		<License>
+			<LicenseId>{3FF18E97-7754-401B-93FB-70544DE28A13}</LicenseId>
+			<Name>TC3 IO</Name>
+			<OrderNo>TC1100</OrderNo>
+		</License>
+		<License>
+			<LicenseId>{66689887-CCBD-452C-AC9A-039D997C6E66}</LicenseId>
+			<Name>TC3 PLC</Name>
+			<OrderNo>TC1200</OrderNo>
+		</License>
+		<License>
+			<LicenseId>{A19036CF-A53B-4E3A-99FF-023EF5C4798B}</LicenseId>
+			<Name>TC3 NC PTP Axis</Name>
+			<Instances>10</Instances>
+		</License>
+		<License>
+			<LicenseId>{520DE751-9DB6-47CB-8240-BD5C466E7E64}</LicenseId>
+			<Name>TC3 NC PTP</Name>
+			<OrderNo>TF5000</OrderNo>
+		</License>
+		<License>
+			<LicenseId>{D4390DEA-A64D-494D-9E09-275326DBB0CB}</LicenseId>
+			<Name>TC3 PLC-HMI (RT)</Name>
+		</License>
+		<License>
+			<LicenseId>{FDE02854-39A7-440C-9EAE-C234A16A3CED}</LicenseId>
+			<Name>TC3 PLC-HMI</Name>
+			<OrderNo>TF1800</OrderNo>
+		</License>
+	</LicenseInfo>
+</TcLicenseInfo>

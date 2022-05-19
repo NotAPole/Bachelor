@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<TcEventSources Version="2">
+	<Source>
+		<GUID>{28111931-001D-0000-951A-7B0008000000}</GUID>
+		<Name LcId="1031">CMMT-AS</Name>
+		<Name LcId="1033">CMMT-AS</Name>
+		<Event>
+			<Id>15</Id>
+			<Message LcId="1033">Calculate bus cycle time failed (Local timer too slow)</Message>
+		</Event>
+		<Event>
+			<Id>17</Id>
+			<Message LcId="1033">Sync Manager {0} invalid address ({1})</Message>
+		</Event>
+		<Event>
+			<Id>18</Id>
+			<Message LcId="1033">Sync Manager {0} invalid size ({1})</Message>
+		</Event>
+		<Event>
+			<Id>19</Id>
+			<Message LcId="1033">Sync Manager {0} invalid settings ({1})</Message>
+		</Event>
+		<Event>
+			<Id>32</Id>
+			<Message LcId="1033">DC activation register is invalid</Message>
+		</Event>
+		<Event>
+			<Id>33</Id>
+			<Message LcId="1033">Configured SyncType (0x1C32.1 or 0x1C33.1) not supported. Check DC registers and supported SyncTypes (0x1C32.4 and 0x1C33.4)</Message>
+		</Event>
+		<Event>
+			<Id>4096</Id>
+			<Message LcId="1031">Allgemeiner Fehler ID: {0}</Message>
+			<Message LcId="1033">General Error ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>4097</Id>
+			<Message LcId="1031">Allgemeine Warnung ID: {0}</Message>
+			<Message LcId="1033">General Warning ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>4098</Id>
+			<Message LcId="1031">Allgemeine Info ID: {0}</Message>
+			<Message LcId="1033">General Info ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>8321</Id>
+			<Message LcId="1031">Current ID: {0}</Message>
+			<Message LcId="1033">Current ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>12418</Id>
+			<Message LcId="1031">Voltage ID: {0}</Message>
+			<Message LcId="1033">Voltage ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>16515</Id>
+			<Message LcId="1031">Temperature ID: {0}</Message>
+			<Message LcId="1033">Temperature ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>20618</Id>
+			<Message LcId="1031">Device Hardware ID: {0}</Message>
+			<Message LcId="1033">Device Hardware ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>24715</Id>
+			<Message LcId="1031">Device Software  ID: {0}</Message>
+			<Message LcId="1033">Device Software  ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>25478</Id>
+			<Message LcId="1031">Device Software - Data Set ID: {0}</Message>
+			<Message LcId="1033">Device Software - Data Set ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>28818</Id>
+			<Message LcId="1031">Additional Modules ID: {0}</Message>
+			<Message LcId="1033">Additional Modules ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>32903</Id>
+			<Message LcId="1031">Monitoring ID: {0}</Message>
+			<Message LcId="1033">Monitoring ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>33160</Id>
+			<Message LcId="1031">Monitoring - Communication ID: {0}</Message>
+			<Message LcId="1033">Monitoring - Communication ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>37008</Id>
+			<Message LcId="1031">External Error ID: {0}</Message>
+			<Message LcId="1033">External Error ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>61573</Id>
+			<Message LcId="1031">Additional Function ID: {0}</Message>
+			<Message LcId="1033">Additional Function ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>61577</Id>
+			<Message LcId="1031">Additional Function ID: {0}</Message>
+			<Message LcId="1033">Additional Function ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>61580</Id>
+			<Message LcId="1031">Additional Function ID: {0}</Message>
+			<Message LcId="1033">Additional Function ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>61585</Id>
+			<Message LcId="1031">Additional Functions ID: {0}</Message>
+			<Message LcId="1033">Additional Functions ID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>65000</Id>
+			<Message LcId="1031">Kein Fehler</Message>
+			<Message LcId="1033">No Error</Message>
+		</Event>
+		<Event>
+			<Id>65421</Id>
+			<Message LcId="1031">Device specific ID: {0}</Message>
+			<Message LcId="1033">Device specific ID: {0}</Message>
+		</Event>
+		<Property>
+			<Name>DisplayTxtId</Name>
+			<Value>true</Value>
+		</Property>
+	</Source>
+</TcEventSources>

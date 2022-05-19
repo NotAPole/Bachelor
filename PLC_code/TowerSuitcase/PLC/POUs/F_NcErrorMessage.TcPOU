@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="F_NcErrorMessage" Id="{c6550364-7eba-4899-8a2d-15b3499de212}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_NcErrorMessage : STRING[2048]
+VAR_INPUT
+	Error		: UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE Error OF
+		0		: 		F_NcErrorMessage	:= 'None';
+
+(* --> User defined errors for entire machine <--*)
+		1		:		F_NcErrorMessage	:= 'The machine is in error at startup - please reset. ';		
+
+		ELSE
+			IF 36844 < Error AND Error < 36857 THEN
+				F_NcErrorMessage:='NC3_Internal_Unexpected INTERNAL Error';
+			ELSE		
+				F_NcErrorMessage:='Msg Unknown';
+			END_IF	
+
+END_CASE
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_NcErrorMessage">
+      <LineId Id="741" Count="3" />
+      <LineId Id="1435" Count="0" />
+      <LineId Id="1457" Count="7" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="1431" Count="0" />
+      <LineId Id="732" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

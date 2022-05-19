@@ -1,0 +1,316 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Tower" Id="{790bbaf8-7c95-4a76-b978-a9d4ede3d2f1}" SpecialFunc="None">
+    <Declaration><![CDATA[
+FUNCTION_BLOCK FB_Tower
+VAR_INPUT
+	resetButton			: BOOL;
+	startButton			: BOOL;
+	stopButton 			: BOOL;
+	forwardButton 		: BOOL; 
+	backwardButton 		: BOOL;
+	fManualVelocity		: LREAL;
+	
+	// velocity constant for HIGH and LOW value. 
+	fManualLowSpeed		: LREAL := 0.05;
+	fManualHighSpeed	: LREAL := 0.1;	
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	// Libraries used
+	stAxis 				: AXIS_REF;
+	MCJog 				: MC_Jog;
+	McPower 			: MC_Power;
+	McReset				: MC_Reset;
+	stErrorData			: ST_ErrorData; 
+	
+	// Real axis data feedback
+	Enabled     		: BOOL;
+	ActualVel   		: LREAL;
+	ActualPos  			: LREAL;
+	
+	//ActualTorque		: LREAL; 
+	bPositiveDirection	: BOOL; 
+	bNegativeDirection	: BOOL;
+	AxisMovement		: BOOL; 
+	bMinSoftLimit		: BOOL;
+	bMaxSoftLimit		: BOOL; 
+	
+	// Error id 
+	mc_errorID 			: UDINT := 1; 
+	mc_error_string 	: STRING; 
+	error_header_string	: STRING;
+	
+	// For blinking lamp
+	light_pulse 		: BOOL; 
+	light_constant 		: BOOL; 
+	tBlink 				: TON; 
+	blink1000 			: BOOL;
+	
+	//Adjusting speed on axis
+	SpeedSetting		: E_Speed; 
+	
+	// TO_STRING for velocity 
+
+	ESpeed         		: E_Speed;
+    nCurrentValue   	: INT;
+    sCurrentValue   	: STRING;
+    wsCurrentValue  	: WSTRING;
+    sComponent      	: STRING;
+    wsComponent     	: WSTRING;
+	
+	// TO_STRING for states
+	EMachineState 		: E_MachineState;
+	nCurrentState   	: INT;
+	sCurrentState		: STRING;
+	wsCurrentState		: WSTRING;
+	sComponentState		: STRING;
+	wsComponentState	: WSTRING;
+	
+	{IF defined (Emulation)}
+	StateTower1					AT %I* : UINT := 8;
+	{ELSE}
+	StateTower1					AT %I* : UINT;
+	{END_IF}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MCJog( Axis := 	stAxis, Velocity := fManualVelocity, Mode := MC_JOGMODE_CONTINOUS );				
+McPower(Axis := stAxis);
+McReset(Axis := stAxis); 
+ActUpdateAxisData();
+ActUpdateManVelocity();
+ActBlinkingTimer(); 
+ActToStringSpeedAndState();
+CASE GVL.eMachineState OF
+	
+	// The machine starts up in Error state
+	E_MachineState.Error:	
+	
+	light_constant := FALSE;
+	EnableAxis(FALSE);
+	mc_error_string := F_NcErrorMessage(mc_errorID);
+	error_header_string := F_HeaderErrorMessage(mc_errorID);
+
+	IF resetButton THEN
+		SetState( E_MachineState.Ready );
+	END_IF
+	
+	// Ready state is for enabling the axis
+	E_MachineState.Ready:
+	light_constant := FALSE;
+	McResetAxis();
+	
+	IF startButton THEN 
+		light_constant := TRUE; 
+		EnableAxis(TRUE);
+		SetState( E_MachineState.Running );
+	END_IF
+	
+	// Running state is for driving the axis in both postive and negative Y direction. 
+	E_MachineState.Running:
+	
+	MCJog.JogForward 	:= forwardButton; 
+	MCJog.JogBackwards 	:= backwardButton;
+	
+	IF stopButton THEN 
+		EnableAxis(FALSE);
+		SetState( E_MachineState.Ready );
+	END_IF
+END_CASE
+]]></ST>
+    </Implementation>
+    <Action Name="ActBlinkingTimer" Id="{7997b698-2ddb-40d6-863b-5d4f32d6de1c}">
+      <Implementation>
+        <ST><![CDATA[tBlink(IN := NOT tblink.Q, PT := T#1S);
+blink1000 := tBlink.ET > T#0.5S;
+
+light_pulse := light_constant OR blink1000;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ActToStringSpeedAndState" Id="{a90444b9-762a-48c2-84fc-5407409b512f}">
+      <Implementation>
+        <ST><![CDATA[nCurrentValue := ESpeed; 
+
+sCurrentValue  := TO_STRING(ESpeed); 
+wsCurrentValue := TO_WSTRING(ESpeed); 
+
+sComponent     := TO_STRING(E_Speed.High); 
+wsComponent    := TO_WSTRING(E_Speed.Low);
+
+nCurrentState := EMachineState;
+
+sCurrentState  := TO_STRING(EMachineState); 
+wsCurrentState  := TO_WSTRING(EMachineState); 
+
+sComponentState      := TO_STRING(E_MachineState.Ready); 
+wsComponentState     := TO_WSTRING(E_MachineState.Running);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ActUpdateAxisData" Id="{1d9c8867-e357-43b9-8ea2-438405f6ca99}">
+      <Implementation>
+        <ST><![CDATA[// Data from NC interface
+stAxis.ReadStatus();
+Enabled      		:= McPower.Status;
+ActualPos 			:= stAxis.NcToPlc.ActPos;
+ActualVel			:= stAxis.NcToPlc.ActVelo;
+
+//ActualTorque		:= ActualTorqueNm;
+bPositiveDirection	:= stAxis.Status.PositiveDirection;
+bNegativeDirection	:= stAxis.Status.NegativeDirection;
+AxisMovement		:= stAxis.Status.Moving;
+bMinSoftLimit		:= stAxis.Status.SoftLimitMinExceeded;
+bMaxSoftLimit		:= stAxis.Status.SoftLimitMaxExceeded;
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ActUpdateManVelocity" Id="{50ea0fa1-7be8-40f9-925e-f76ca7d3387e}">
+      <Implementation>
+        <ST><![CDATA[CASE SpeedSetting OF 
+
+	E_Speed.Low:
+	
+		IF GVL.UI_EnableHighSpeed THEN
+			fManualVelocity			:= fManualHighSpeed;
+			SpeedSetting			:= E_Speed.High;
+			
+		ELSE
+			fManualVelocity			:= fManualLowSpeed;
+		END_IF
+	
+	E_Speed.High:
+	
+		IF NOT GVL.UI_EnableHighSpeed THEN
+			fManualVelocity			:= fManualLowSpeed;
+			SpeedSetting			:= E_Speed.Low;
+		ELSE
+			fManualVelocity			:= fManualHighSpeed;
+		END_IF
+
+END_CASE]]></ST>
+      </Implementation>
+    </Action>
+    <Method Name="EnableAxis" Id="{c12d53d6-0e0b-41e2-a81e-1cca75c4c072}">
+      <Declaration><![CDATA[METHOD EnableAxis : BOOL
+VAR_INPUT
+	axisBoolStatus : BOOL; 
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[McPower.Enable 			:= axisBoolStatus;
+McPower.Enable_Positive := axisBoolStatus;
+McPower.Enable_Negative := axisBoolStatus;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ErrorUpdate" Id="{9d2b4b8a-3d44-41fe-86c5-96ac98771da8}">
+      <Declaration><![CDATA[METHOD ErrorUpdate
+VAR_INPUT
+	eState				: E_Axis;
+	nErrorId			: UDINT;
+	sErrorMessageBody	: STRING[300];
+END_VAR
+VAR
+	sErrorMessageHeader	: STRING[300];
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+stErrorData.eLastState			:= eState;
+stErrorData.nErrorID			:= nErrorId;
+stErrorData.sErrorMessageBody	:= sErrorMessageBody;
+stErrorData.sErrorMessageHeader	:= F_HeaderErrorMessage(nErrorId);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="McResetAxis" Id="{cbb90547-184b-4619-9d2f-04effdead6da}">
+      <Declaration><![CDATA[METHOD McResetAxis : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[McReset.Execute := TRUE;
+
+IF McReset.Done THEN 
+	McReset.Execute := FALSE; 
+END_IF 	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SetState" Id="{8be03e57-4f39-4739-914f-9ccda3199906}">
+      <Declaration><![CDATA[METHOD SetState
+VAR_INPUT
+	eState	: E_MachineState;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[GVL.eMachineState	:= eState;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_Tower">
+      <LineId Id="2401" Count="4" />
+      <LineId Id="2413" Count="0" />
+      <LineId Id="2552" Count="0" />
+      <LineId Id="2415" Count="5" />
+      <LineId Id="2444" Count="3" />
+      <LineId Id="2449" Count="1" />
+      <LineId Id="2452" Count="5" />
+      <LineId Id="2467" Count="2" />
+      <LineId Id="2554" Count="0" />
+      <LineId Id="2470" Count="2" />
+      <LineId Id="2476" Count="2" />
+      <LineId Id="2481" Count="1" />
+      <LineId Id="2484" Count="4" />
+      <LineId Id="2493" Count="0" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Tower.ActBlinkingTimer">
+      <LineId Id="5" Count="2" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Tower.ActToStringSpeedAndState">
+      <LineId Id="2" Count="13" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Tower.ActUpdateAxisData">
+      <LineId Id="64" Count="1" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="71" Count="1" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="1" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="78" Count="1" />
+      <LineId Id="96" Count="3" />
+      <LineId Id="58" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Tower.ActUpdateManVelocity">
+      <LineId Id="2" Count="5" />
+      <LineId Id="9" Count="2" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="15" Count="5" />
+      <LineId Id="22" Count="2" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Tower.EnableAxis">
+      <LineId Id="6" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_Tower.ErrorUpdate">
+      <LineId Id="70" Count="0" />
+      <LineId Id="58" Count="2" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="71" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Tower.McResetAxis">
+      <LineId Id="6" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Tower.SetState">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
