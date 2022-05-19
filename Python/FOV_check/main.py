@@ -436,10 +436,10 @@ def read_file(file, additional_points):
 # Setup and main program
 def main():
     debug = False  # Debug mode
-    fov_check = True  # FOV check mode
+    fov_check = False  # FOV check mode
     use_multi_processing = False  # Multi processing mode
     steps = 5000  # Number of discretization points between camera and point
-    additional_points = 20  # Additional points along each surface
+    additional_points = 10  # Additional points along each surface
     threshold_surface = 1/steps*20  # Margins of the planar equations
     threshold_point = 0.02  # Margin for deciding whether point is part of a crossed surface
     start_time = time.time()
@@ -465,9 +465,9 @@ def main():
         show_plots(points_in_fov, not_possible_points, cameras, unit_vectors, color="blue")
     # Checks all point to see whether or not they are seen by any of the cameras
     else:
-        cameras.append(Camera(-142, -122, -104, (39, 25), (40, 40, 5), (120, 300)))
-        cameras.append(Camera(-142, -122, 238, (39, 25), (40, 40, 5), (120, 300)))
-        cameras.append(Camera(222, 242, -104, (39, 25), (40, 40, 5), (120, 300)))
+        cameras.append(Camera(-38, -18, -44, (70, 55), (40, 40, 5), (25, 900)))
+        cameras.append(Camera(-38, -18, 100, (70, 55), (40, 40, 5), (25, 900)))
+        cameras.append(Camera(118, 138, -44, (70, 55), (40, 40, 5), (25, 900)))
 
         p1 = Pallet(pallet_surface_num)
         # Checks seen points using multi processing
